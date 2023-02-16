@@ -19,4 +19,8 @@ knit: (function(input, ...) {
 
 This is a test. Keith can successfully upload and edit files.
 
+## Shoshana Farber
+
+Shoshana can successfully upload and edit files.
+
 ## Next person?
