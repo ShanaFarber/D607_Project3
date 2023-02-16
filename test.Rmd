@@ -27,4 +27,15 @@ Shoshana can successfully upload and edit files.
 
 Kayleah can add files!
 
+##John Cruz
+
+```{r test code}
+filepath <- './data/testInputData.csv'
+df <- read_csv(filepath, show_col_types = FALSE)
+df$Column3 <- df$Index + df$Column2
+write_csv(df, filepath)
+```
+
+John can update and upload files!
+
 ## Next person?
