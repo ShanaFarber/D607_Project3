@@ -29,6 +29,10 @@ Kayleah can add files!
 
 ##John Cruz
 
+## Waheeb Algabri
+
+can successfully upload and edit files.
+
 ```{r test code}
 filepath <- './data/testInputData.csv'
 df <- read_csv(filepath, show_col_types = FALSE)
