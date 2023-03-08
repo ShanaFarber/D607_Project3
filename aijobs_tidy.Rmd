@@ -7,21 +7,31 @@ output: html_document
 
 ```{r setup, message = FALSE}
 library(tidyverse)
+library(countrycode)
 ```
 
-## TBD
+TO REVIEW:  
+https://medium.com/@Olohireme/job-skills-extraction-from-data-science-job-posts-38fd58b94675  
+https://cran.r-project.org/web/packages/NLP/index.html  
+https://github.com/news-r/nltk4r
+
+## Read in data
 
 ```{r}
-aijobs <- read_csv('data/aiJobsDf.csv')
+aijobs <- read_csv('data/aiJobsDf.csv') %>%
+  rename(index = ...1) %>%
+  mutate(index = index + 1)
 
 head(aijobs)
 ```
 
+## Extract Features
 
 ```{r}
 aijobs <- aijobs %>%
-  mutate(description = str_replace_all(tolower(description),'[\\,\\.\\(\\)\\;\\:\']',''),
-         tokens = str_split(description, ' '),
+  mutate(description = tolower(description) %>%
+           str_replace_all('[‘’“”\\,\\.\\(\\)\\;\\:\'\\?]','') %>%
+           str_replace_all('[-]', ' '),
          
          highest_ed = case_when(str_detect(description, 'phd') ~ 'phd',
                                 str_detect(description, 'master') ~ 'master',
@@ -33,48 +43,116 @@ aijobs <- aijobs %>%
          pay_high = case_when(is.na(pay_high) ~ 0,
                               TRUE ~ as.integer(pay_high)*1000),
          
-         years_exp = str_extract(description, paste0('[0-9]+(.){0,3}',
-                          '\\s+(\\b[a-z]+\\b\\s+){0,3}years',
-                          '\\s+(\\b[a-z]+\\b\\s+){0,5}experience'
-                          ))
+         suppressWarnings({
+         years_exp = str_extract_all(description, 
+                        paste0('[0-9]{1,2}(?=(.){0,2}',
+                               '\\s+(\\b[a-z]+\\b\\s+){0,3}(years|year)',
+                               '\\s+(\\b[a-z]+\\b\\s+){0,3}experience)')) %>%
+           map(as.numeric) %>%
+           map(~ifelse(.x >= 20, 0, .x)) %>%
+           map_dbl(max) %>%
+           ifelse( (. == -Inf | . == 0), NA, .)
+         }),
+         
+         seniority = str_extract(pay_level, '(?<=; ).*(?=;)') %>%
+           str_replace_all('(Contract; |; Clearance required|Part Time; |Freelance; )',''),
+         seniority = fct_other(seniority,
+                               drop = c('Freelance','Contract','Clearance required'),
+                               other_level = 'Short-Term'),
+         seniority = fct_relevel(seniority,
+                                 'Executive-level / Director',
+                                 'Senior-level / Expert',
+                                 'Mid-level / Intermediate',
+                                 'Entry-level / Junior',
+                                 'Internship',
+                                 'Short-Term'),
+         
+         continent = countrycode(sourcevar = location,
+                                 origin = 'country.name',
+                                 destination = 'continent')
          )
+```
 
+## Error Analysis
+
+Years of Experience
+
+```{r}
+test <- aijobs$description[402]
+
+str_extract_all(test, '\\s+(\\b[a-z0-9]+\\b\\s+){0,5}years\\s+(\\b[a-z]+\\b\\s+){5}')
+
+str_extract_all(test, paste0('\\s+(\\b[a-z0-9]+\\b\\s+){0,5}',
+                             '[0-9]+(.){0,2}',
+                             '\\s+(\\b[a-z]+\\b\\s+){0,5}years',
+                             '\\s+(\\b[a-z]+\\b\\s+){0,5}experience'))
+
+str_extract_all(test, paste0('[0-9]{1,2}(?=(.){0,2}',
+                             '\\s+(\\b[a-z]+\\b\\s+){0,3}(years|year)',
+                             '\\s+(\\b[a-z]+\\b\\s+){0,3}experience)')) %>%
+  map(as.numeric) %>%
+  map(~ifelse(.x >= 20, 0, .x)) %>%
+  map_dbl(max)
+```
+
+## Preliminary Visualizations
+
+```{r}
 ggplot(aijobs, aes(highest_ed)) +
   geom_bar()
 
 aijobs %>%
-  filter(!is.na(pay_high)) %>%
-  ggplot(aes(x = pay_high)) +
-  geom_histogram(bins = 20)
+  ggplot(aes(pay_high)) +
+  geom_histogram(binwidth = 20000) +
+  scale_x_continuous(label = scales::comma,
+                     limits = c(0,500000))
 
-filter(aijobs, !is.na(years_exp))
-```
+aijobs %>%
+  ggplot(aes(years_exp)) +
+  geom_bar()
 
-```{r}
-test <- aijobs$tokens[1]
+aijobs %>%
+  ggplot(aes(fct_rev(seniority))) +
+  geom_bar() +
+  coord_flip()
 
-which(unlist(test) == 'years')
+aijobs %>%
+  filter(seniority != 'Internship') %>%
+  ggplot(aes(years_exp, ..density..)) +
+  geom_histogram(binwidth = 3) +
+  facet_grid(~seniority,
+             labeller = label_wrap_gen(width=2, multi_line=TRUE))
 
-unlist(test)[ (which(unlist(test) == 'years') - 5) : 
-             (which(unlist(test) == 'years') + 5) ] %>% 
-  str_c(collapse = ' ')
+aijobs %>%
+  filter(seniority != 'Internship') %>%
+  ggplot(aes(pay_high, ..density..)) +
+  geom_histogram(binwidth = 20000) +
+  scale_x_continuous(label = scales::comma,
+                     limits = c(0,500000)) +
+  theme(axis.text.x = element_text(angle=90)) +
+  facet_grid(~seniority,
+             labeller = label_wrap_gen(width=2, multi_line=TRUE))
 
-test2 <- aijobs$description[000]
+aijobs %>%
+  filter(!is.na(highest_ed)) %>%
+  ggplot(aes(years_exp, ..density..)) +
+  geom_histogram(binwidth = 3) +
+  facet_grid(~highest_ed,
+             labeller = label_wrap_gen(width=2, multi_line=TRUE))
 
-str_extract_all(test2, '\\s+(\\b[a-z]+\\b\\s+){0,5}years\\s+(\\b[a-z]+\\b\\s+){5}')
+aijobs %>%
+  filter(!is.na(highest_ed)) %>%
+  ggplot(aes(pay_high, ..density..)) +
+  geom_histogram(binwidth = 20000) +
+  scale_x_continuous(label = scales::comma,
+                     limits = c(0,500000)) +
+  theme(axis.text.x = element_text(angle=90)) +
+  facet_grid(~highest_ed,
+             labeller = label_wrap_gen(width=2, multi_line=TRUE))
 
-str_extract_all(test2, '\\s+(\\b[a-z]+\\b\\s+){0,5}experience\\s+(\\b[a-z]+\\b\\s+){0,5}')
-
-str_extract(test2, paste0('[0-9]+(.){0,3}',
-                          '\\s+(\\b[a-z]+\\b\\s+){0,3}years',
-                          '\\s+(\\b[a-z]+\\b\\s+){0,5}experience'
-                          ))
-
-str_extract(test2, paste0('[0-9]+(?=(.){0,3}',
-                          '\\s+(\\b[a-z]+\\b\\s+){0,3}years',
-                          '\\s+(\\b[a-z]+\\b\\s+){0,3}experience)'
-                          ))
-
-str_extract(test2, '[0-9]+.(?=\\s+(\\b.*\\b\\s+){1,4}\\s+years\\s+(\\b.*\\b\\s+){1,4}\\s+experience)')
+aijobs %>%
+  ggplot(aes(fct_rev(fct_infreq(continent)))) +
+  geom_bar() +
+  coord_flip()
 ```
 
