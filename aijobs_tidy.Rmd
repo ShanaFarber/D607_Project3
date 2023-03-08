@@ -17,13 +17,64 @@ aijobs <- read_csv('data/aiJobsDf.csv')
 head(aijobs)
 ```
 
-![Target Features](/references/features.png)
-
 
 ```{r}
-aijobs[1,]$description %>%
-  str_replace_all('[\\,\\.\\(\\)\\;\\:\']','') %>%
-  str_split(' ') %>%
-  str_extract()
+aijobs <- aijobs %>%
+  mutate(description = str_replace_all(tolower(description),'[\\,\\.\\(\\)\\;\\:\']',''),
+         tokens = str_split(description, ' '),
+         
+         highest_ed = case_when(str_detect(description, 'phd') ~ 'phd',
+                                str_detect(description, 'master') ~ 'master',
+                                str_detect(description, 'bachelor') ~ 'bachelor',
+                                TRUE ~ 'NA'),
+         
+         pay_low = as.integer(str_extract(pay_level, '[0-9]+(?=K -)'))*1000,
+         pay_high = str_extract(pay_level, '(?<=- )[0-9]+(?=K)'),
+         pay_high = case_when(is.na(pay_high) ~ 0,
+                              TRUE ~ as.integer(pay_high)*1000),
+         
+         years_exp = str_extract(description, paste0('[0-9]+(.){0,3}',
+                          '\\s+(\\b[a-z]+\\b\\s+){0,3}years',
+                          '\\s+(\\b[a-z]+\\b\\s+){0,5}experience'
+                          ))
+         )
+
+ggplot(aijobs, aes(highest_ed)) +
+  geom_bar()
+
+aijobs %>%
+  filter(!is.na(pay_high)) %>%
+  ggplot(aes(x = pay_high)) +
+  geom_histogram(bins = 20)
+
+filter(aijobs, !is.na(years_exp))
+```
+
+```{r}
+test <- aijobs$tokens[1]
+
+which(unlist(test) == 'years')
+
+unlist(test)[ (which(unlist(test) == 'years') - 5) : 
+             (which(unlist(test) == 'years') + 5) ] %>% 
+  str_c(collapse = ' ')
+
+test2 <- aijobs$description[000]
+
+str_extract_all(test2, '\\s+(\\b[a-z]+\\b\\s+){0,5}years\\s+(\\b[a-z]+\\b\\s+){5}')
+
+str_extract_all(test2, '\\s+(\\b[a-z]+\\b\\s+){0,5}experience\\s+(\\b[a-z]+\\b\\s+){0,5}')
+
+str_extract(test2, paste0('[0-9]+(.){0,3}',
+                          '\\s+(\\b[a-z]+\\b\\s+){0,3}years',
+                          '\\s+(\\b[a-z]+\\b\\s+){0,5}experience'
+                          ))
+
+str_extract(test2, paste0('[0-9]+(?=(.){0,3}',
+                          '\\s+(\\b[a-z]+\\b\\s+){0,3}years',
+                          '\\s+(\\b[a-z]+\\b\\s+){0,3}experience)'
+                          ))
+
+str_extract(test2, '[0-9]+.(?=\\s+(\\b.*\\b\\s+){1,4}\\s+years\\s+(\\b.*\\b\\s+){1,4}\\s+experience)')
 ```
 
