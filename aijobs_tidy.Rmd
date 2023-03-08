@@ -1,0 +1,29 @@
+---
+title: "AI Jobs Data Tidying"
+author: "Keith Colella"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, message = FALSE}
+library(tidyverse)
+```
+
+## TBD
+
+```{r}
+aijobs <- read_csv('data/aiJobsDf.csv')
+
+head(aijobs)
+```
+
+![Target Features](/references/features.png)
+
+
+```{r}
+aijobs[1,]$description %>%
+  str_replace_all('[\\,\\.\\(\\)\\;\\:\']','') %>%
+  str_split(' ') %>%
+  str_extract()
+```
+
