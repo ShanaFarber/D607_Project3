@@ -117,7 +117,7 @@ I the combined this with a data set of skills that I found online:
 
 ```{r}
 # load skills csv
-skills <- read.csv("C:/Users/Shoshana/Downloads/public_use-industry-skills-needs.csv", na.strings = c(""))
+skills <- read.csv(url("https://raw.githubusercontent.com/ShanaFarber/D607_Project3/main/data/public_use-industry-skills-needs.csv"), na.strings = c(""))
 
 # clean up and extract skills
 skills <-  unique(skills$skill_group_name)
@@ -174,12 +174,10 @@ for(i in 1:length(usa_jobs_cleaned$job_id)) {
       job_id_and_skill <- append(job_id_and_skill, paste(job_id, pat, sep = ","))
       }
     } else {
-      quals <- str_replace_all(usa_jobs_cleaned$job_quals[i], " (\\s+)", ",")
-      quals <- str_split(quals, ",")
-      pat <- "^R$"
+      pat <- " R "
       
-      if (str_detect(tolower(quals), tolower(pat))) {
-      job_id_and_skill <- append(job_id_and_skill, paste(job_id, pat, sep = ","))
+      if (str_detect(tolower(usa_jobs_cleaned$job_quals[i]), tolower(pat))) {
+      job_id_and_skill <- append(job_id_and_skill, paste(job_id, "R", sep = ","))
       }
     }
     
