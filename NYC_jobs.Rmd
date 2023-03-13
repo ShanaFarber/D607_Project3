@@ -1,0 +1,241 @@
+---
+title: "NYC_tidy"
+author: "Waheeb Algabri"
+date: "2023-03-09"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+load required libraries 
+
+```{r}
+library(tidyverse)
+library(dplyr)
+library(knitr)
+library(tidytext)
+library(stringr)
+library(ggwordcloud)
+```
+
+
+Read the data
+
+```{r}
+NYC_Jobs_2 <- read_csv("data/NYC_Jobs-2.csv")
+```
+
+
+```{r}
+head(NYC_Jobs_2)
+```
+
+```{r}
+# extract necessary columns
+selected_data <- NYC_Jobs_2 %>%
+  select(`Job ID`, `Business Title`, `Job Description`, `Salary Range From`, `Salary Range To`, `Work Location`)
+
+```
+
+
+This code will select the Job Description column from the selected_data data frame, tokenize the words in each description using unnest_tokens(), remove any non-alphanumeric characters, and remove stop words using the filter() function. This will give us a tidy data frame of all the words in our job descriptions that are not stop words. From here, we can perform further analysis on these words to identify the most common data science skills.
+
+
+```{r}
+# Load required libraries
+library(tidytext)
+library(dplyr)
+library(stringr)
+
+# Clean and tokenize job descriptions
+selected_data %>%
+  select(`Job Description`) %>%
+  unnest_tokens(word,`Job Description`) %>%
+  mutate(word = str_replace_all(word, "[^[:alnum:]']", "")) %>%
+  filter(!word %in% stop_words$word)
+
+```
+
+
+```{r}
+# extract salary information
+selected_data$MinSalaries <- as.numeric(str_extract(selected_data$`Salary Range From`, "\\d+"))
+selected_data$MaxSalaries <- as.numeric(str_extract(selected_data$`Salary Range To`, "\\d+"))
+selected_data$MeanSalary <- rowMeans(selected_data[,c("MinSalaries", "MaxSalaries")], na.rm = TRUE)
+
+# filter out rows with missing salary information
+selected_data <- selected_data %>%
+  filter(!is.na(MinSalaries) & !is.na(MaxSalaries))
+  
+# see ranges of mean salaries
+range(selected_data$MeanSalary)
+
+```
+
+```{r}
+OneHundredToTwoHundredK <- selected_data %>% filter(selected_data$MeanSalary>=100 & selected_data$MeanSalary<=200)
+
+
+LessThanUSMeanSalary <- selected_data %>% filter(selected_data$MeanSalary < 51.9)
+UpperEchelon <- selected_data %>% filter(selected_data$MeanSalary > 200)
+```
+
+
+Upper Echelon Key Characteristics
+
+
+```{r}
+# tokenize and clean job descriptions for Upper Echelon salaries
+description <- data.frame(UpperEchelon$`Job Description`)
+desclist <- unlist(description)
+desclist <- str_remove_all(desclist, '[[:punct:]]')
+desclist <- str_remove_all(desclist, '[\r\n]')
+desclist <- str_remove_all(desclist, '[0-9]')
+desclist <- str_remove_all(desclist, '[\r\n]')
+desclist <- tolower(desclist)
+descsplit <- strsplit(desclist, " ")
+```
+
+
+```{r}
+# count word frequencies
+frequenciesUE <- table(unlist(descsplit))
+frequenciesUE <- data.frame(frequenciesUE)
+colnames(frequenciesUE) <- c('word', 'count')
+
+```
+
+
+```{r}
+# omit frequently occurring words
+omit <- c(" ", "and", "with", "from", "for", "the", "our", "your", "are", "will", "with", "that", "other", "all", "have", "to", "of", "", "this", "you", "a", "in", "is", "or", "as", "on", "be", "we", "by", "at", "an", "their", "us", "it", "can", "who", "such", "through", "into", "including", "one", "two", "three", "four", "five", "six", "not")
+frequenciesUE <- subset(frequenciesUE, as.numeric(count) >= 3)
+frequenciesUE_relevant <- frequenciesUE[!frequenciesUE$word %in% omit, ]
+```
+
+
+```{r}
+# sort words by frequency in descending order
+frequenciesUE_relevant <- frequenciesUE_relevant[order(-frequenciesUE_relevant$count), ]
+
+```
+
+
+```{r}
+# plot top 50 frequent words
+overweighted <- c("data", "analyst", "analysis", "analytics")
+freqplot <- frequenciesUE_relevant[!frequenciesUE_relevant$word %in% overweighted, ]
+freqplot <- freqplot[1:50, ]
+ggplot(freqplot, aes(label = word, size = count, color = factor(sample.int(8, nrow(freqplot), replace = TRUE))))+
+  geom_text_wordcloud()+
+  scale_radius(range = c(0, 12), limits = c(0, NA)) +
+  theme_minimal()
+
+
+
+```
+
+Lowest Income Key Characteristics
+
+```{r}
+# tokenize and clean job descriptions for salaries less than or equal to US mean
+description <- data.frame(selected_data %>% filter(MeanSalary <= mean(selected_data$MeanSalary)) %>% select(`Job Description`))
+desclist <- unlist(description)
+desclist <- str_remove_all(desclist, '[[:punct:]]')
+desclist <- str_remove_all(desclist, '[\r\n]')
+desclist <- str_remove_all(desclist, '[0-9]')
+desclist <- str_remove_all(desclist, '[\r\n]')
+desclist <- tolower(desclist)
+descsplit <- strsplit(desclist, " ")
+
+# count word frequencies
+frequenciesUSMean <- table(unlist(descsplit))
+frequenciesUSMean <- data.frame(frequenciesUSMean)
+colnames(frequenciesUSMean) <- c('word', 'count')
+
+# omit infrequently occurring words
+frequenciesUSMean <- subset(frequenciesUSMean, as.numeric(count) >= 3)
+
+# omit stop words
+omit <- c(" ", "and", "with", "from", "for", "the", "our", "your", "are", "will", "with", "that", "other", "all", "have", "to", "of", "", "this", "you", "a", "in", "is", "or", "as", "on", "be", "we", "by", "at", "an", "their", "us", "it", "can", "who", "such", "through", "into", "including", "one", "two", "three", "four", "five", "six", "not")
+frequenciesUSMean_relevant <- frequenciesUSMean[!frequenciesUSMean$word %in% omit, ]
+
+```
+
+
+```{r}
+# plot top 50 frequent words
+overweighted <- c("data", "analyst", "analysis", "analytics")
+freqplot <- frequenciesUSMean_relevant[!frequenciesUSMean_relevant$word %in% overweighted, ]
+freqplot <- freqplot[1:50, ]
+ggplot(freqplot, aes(label = word, size = count, color = factor(sample.int(8, nrow(freqplot), replace = TRUE))))+
+  geom_text_wordcloud()+
+  scale_radius(range = c(0, 12), limits = c(0, NA)) +
+  theme_minimal()
+
+```
+
+
+```{r}
+# Tokenize and clean job descriptions for salaries between $100,000 and $200,000
+description <- data.frame(OneHundredToTwoHundredK %>% select(`Job Description`))
+desclist <- unlist(description)
+desclist <- str_remove_all(desclist, '[[:punct:]]')
+desclist <- str_remove_all(desclist, '[\r\n]')
+desclist <- str_remove_all(desclist, '[0-9]')
+desclist <- str_remove_all(desclist, '[\r\n]')
+desclist <- tolower(desclist)
+descsplit <- strsplit(desclist, " ")
+
+# Count word frequencies
+frequencies100to200K <- table(unlist(descsplit))
+frequencies100to200K <- data.frame(frequencies100to200K)
+colnames(frequencies100to200K) <- c('word', 'count')
+
+# Omit frequently occurring words
+omit <- c(" ", "and", "with", "from", "for", "the", "our", "your", "are", "will", "with", "that", "other", "all", "have", "to", "of", "", "this", "you", "a", "in", "is", "or", "as", "on", "be", "we", "by", "at", "an", "their", "us", "it", "can", "who", "such", "through", "into", "including", "one", "two", "three", "four", "five", "six", "not")
+frequencies100to200K <- subset(frequencies100to200K, as.numeric(count) >= 3)
+frequencies100to200K_relevant <- frequencies100to200K[!frequencies100to200K$word %in% omit, ]
+
+# Sort words by frequency in descending order
+frequencies100to200K_relevant <- frequencies100to200K_relevant[order(-frequencies100to200K_relevant$count), ]
+
+# Plot top 50 frequent words
+overweighted <- c("data", "analyst", "analysis", "analytics")
+freqplot <- frequencies100to200K_relevant[!frequencies100to200K_relevant$word %in% overweighted, ]
+freqplot <- freqplot[1:50, ]
+ggplot(freqplot, aes(label = word, size = count, color = factor(sample.int(8, nrow(freqplot), replace = TRUE))))+
+  geom_text_wordcloud()+
+  scale_radius(range = c(0, 12), limits = c(0, NA)) +
+  theme_minimal()
+
+```
+
+
+```{r}
+head(freqplot)
+```
+
+```{r}
+freqbar <- freqplot[1:10, ]
+ggplot(freqbar, aes(x = word, y = count, color = word, fill = word))+
+  geom_col()+
+  ggtitle("All Job Descriptions, Top 10 Keywords") +
+  xlab("Key Word")+
+  ylab("Count")+
+  theme(plot.title = element_text(hjust = 0.5))+
+  coord_flip()
+```
+
+# Conclusion 
+
+In this code, we first loaded the required libraries for data analysis, including tidyverse, dplyr, knitr, tidytext, stringr, and ggwordcloud. We then read in the data from a CSV file using the read_csv() function from the readr package.
+
+Next, we selected the necessary columns from the data frame, including Job ID, Business Title, Job Description, Salary Range From, Salary Range To, and Work Location. We then used the unnest_tokens() function from tidytext to tokenize the words in the Job Description column, removed any non-alphanumeric characters, and filtered out stop words using filter(). This resulted in a tidy data frame of all the words in our job descriptions that are not stop words.
+
+We then extracted salary information from the data frame and filtered out rows with missing salary information. We also looked at the range of mean salaries in the data and created subsets of the data based on specific salary ranges.
+
+Finally, we analyzed the key characteristics of jobs with upper echelon salaries and lowest income. For upper echelon jobs, we counted word frequencies, filtered out frequently occurring words, and plotted the top 50 frequent words using ggwordcloud. For lowest income jobs, we followed the same process to count word frequencies, filter out frequently occurring words, and plotted the top 50 frequent words.
+
