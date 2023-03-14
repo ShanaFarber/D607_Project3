@@ -1,5 +1,5 @@
 ---
-title: "Matching jobs and skills"
+title: "DATA 607 - Project 3 - Matching jobs and skills"
 author: "Keith Colella"
 date: "`r Sys.Date()`"
 output: html_document
@@ -16,7 +16,96 @@ job_listings <- read_csv('output/job_listings.csv')
 skills <- read_csv('output/skills.csv')
 ```
 
+## Additional cleaning
+
+We use mutate to clean up and extract some additional variables. First, we convert key columns (title, description, qualifications) to lowercase and remove special characters. The goal is to facilitate matches. Then, we attempt to extract the highest education level requested in each listing, along with the max requested years of experience. We create a temporary "combo" field so we can look across both job descriptions and qualifications fields.
+
 ```{r}
-filter(job_listings, website == 'data.cityofnewyork.us') 
+job_listings <- job_listings %>%
+  mutate(job_title = tolower(job_title) %>%
+           str_replace_all('[â¢\u0080-\uFFFF]', ''),
+         
+         job_quals = tolower(job_quals) %>%
+           str_replace_all('[â¢\u0080-\uFFFF]', '') %>%
+           str_replace_all('[‘’“”\\,\\.\\(\\)\\;\\:\'\\?]','') %>%
+           str_replace_all('[-]', ' '),
+         
+         job_description = tolower(job_description) %>%
+           str_replace_all('[â¢\u0080-\uFFFF]', '') %>%
+           str_replace_all('[‘’“”\\,\\.\\(\\)\\;\\:\'\\?]','') %>%
+           str_replace_all('[-]', ' '),
+         
+         combo_details = str_c(job_quals, job_description),
+         
+         highest_ed = case_when(str_detect(combo_details, '(phd|ph d)') ~ 'phd',
+                                str_detect(combo_details, 'master') ~ 'master',
+                                str_detect(combo_details, 'advanced degree') ~ 'master',
+                                str_detect(combo_details, 'bachelor') ~ 'bachelor'),
+         
+         years_exp = suppressWarnings({
+           str_extract_all(combo_details, 
+                           paste0('[0-9]{1,2}(?=(.){0,2}',
+                                  '\\s+(\\b[a-z]+\\b\\s+){0,3}(years|year)',
+                                  '\\s+(\\b[a-z]+\\b\\s+){0,3}experience)')) %>%
+             map(as.numeric) %>%
+             map(~ifelse(.x >= 20, 0, .x)) %>%
+             map_dbl(max) %>%
+             ifelse( (. == -Inf | . == 0), NA, .)
+           })
+         ) %>%
+  select(-combo_details)
+```
+
+Next, we aim to extract all relevant skills from the qualifications and descriptions fields. These skills are first extracted into a list-column, with each row containing a list of unique skills mentioned in the job details. We then unnest those lists to create another long-form dataframe to facilitate further analysis.
+
+```{r}
+skills_unique <- unique(tolower(skills$skill))
+skill_regex_pattern <- paste0("\\b", 
+                              paste(skills_unique, collapse="\\b|\\b"),
+                              "\\b")
+
+
+job_listings_skills <- job_listings %>%
+  mutate(combo_details = str_c(job_quals, job_description),
+         skills = str_extract_all(combo_details, skill_regex_pattern)) %>%
+  select(-combo_details, -job_quals, -job_description) %>%
+  rowwise() %>%
+  mutate(skills = list(unique(skills))) %>%
+  ungroup()
+
+job_listings_skills_long <- job_listings_skills %>%
+  unnest_longer(col = skills, values_to = 'skills', indices_include = FALSE)
+```
+
+We now can write the two dataframes to csv.
+
+```{r}
+#### Unable to write df with list-column to csv. Need to consider solutions.
+# write.csv(job_listings_skills, "output/job_listings_skills.csv", row.names = FALSE)
+
+write.csv(job_listings_skills_long, "output/job_listings_skills_long.csv", row.names = FALSE)
+```
+
+
+Finally, we take a quick look at the cleaned data from each source.
+
+```{r}
+for (source in unique(job_listings_skills$website)) {
+  tbl <- job_listings_skills %>%
+    filter(website == source,
+           !is.na(highest_ed),
+           !is.na(years_exp)) %>%
+    head(5) %>%
+    print()
+}
+
+for (source in unique(job_listings_skills_long$website)) {
+  tbl <- job_listings_skills_long %>%
+    filter(website == source,
+           !is.na(highest_ed),
+           !is.na(years_exp)) %>%
+    head(15) %>%
+    print()
+}
 ```
 

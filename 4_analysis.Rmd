@@ -1,0 +1,103 @@
+---
+title: "DATA 607 - Project 3 - Analysis"
+author: "Keith Colella"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, message=FALSE}
+library(tidyverse)
+```
+
+## Read in data
+
+```{r}
+# jobs <- read_csv('output/job_listings_skills.csv')
+jobs_long <- read_csv('output/job_listings_skills_long.csv')
+```
+
+## Visualizations
+
+```{r}
+jobs_long %>%
+  group_by(job_id, highest_ed) %>%
+  summarize(jobs = n(), .groups = 'keep') %>%
+  ggplot(aes(highest_ed)) +
+  geom_bar()
+
+jobs_long %>%
+  group_by(job_id, salary_max) %>%
+  summarize(jobs = n(), .groups = 'keep') %>%
+  ggplot(aes(salary_max)) +
+  geom_histogram(binwidth = 20000) +
+  scale_x_continuous(label = scales::comma,
+                     limits = c(0,500000))
+
+jobs_long %>%
+  group_by(job_id, years_exp) %>%
+  summarize(jobs = n(), .groups = 'keep') %>%
+  ggplot(aes(years_exp)) +
+  geom_bar()
+
+jobs_long %>%
+  group_by(job_id, years_exp, highest_ed) %>%
+  summarize(jobs = n(), .groups = 'keep') %>%
+  filter(!is.na(highest_ed)) %>%
+  ggplot(aes(years_exp, ..density..)) +
+  geom_histogram(binwidth = 3) +
+  facet_grid(~highest_ed,
+             labeller = label_wrap_gen(width=2, multi_line=TRUE))
+
+jobs_long %>%
+  group_by(job_id, salary_max, highest_ed) %>%
+  summarize(jobs = n(), .groups = 'keep') %>%
+  filter(!is.na(highest_ed)) %>%
+  ggplot(aes(salary_max, ..density..)) +
+  geom_histogram(binwidth = 20000) +
+  scale_x_continuous(label = scales::comma,
+                     limits = c(0,500000)) +
+  theme(axis.text.x = element_text(angle=90)) +
+  facet_grid(~highest_ed,
+             labeller = label_wrap_gen(width=2, multi_line=TRUE))
+
+## We need to do some cleanup on location
+jobs_long %>%
+  ggplot(aes(fct_rev(fct_infreq(location)))) +
+  geom_bar() +
+  coord_flip()
+```
+
+## Most Frequently Cited Skills
+
+```{r}
+jobs_long %>%
+  group_by(skills) %>%
+  summarize(citations = n(), .groups = 'keep') %>%
+  arrange(desc(citations)) %>%
+  head(20)
+
+for (ed_level in unique(jobs_long$highest_ed)) {
+  jobs_long %>%
+    filter(highest_ed == ed_level) %>%
+    group_by(skills) %>%
+    summarize(citations = n(),
+              ed_level = ed_level,
+              .groups = 'keep') %>%
+    arrange(desc(citations)) %>%
+    head(10) %>%
+    print()
+}
+
+for (loc in c('New York', 'Remote', 'France')) {
+  jobs_long %>%
+    filter(location == loc) %>%
+    group_by(skills) %>%
+    summarize(citations = n(),
+              location = loc,
+              .groups = 'keep') %>%
+    arrange(desc(citations)) %>%
+    head(10) %>%
+    print()
+}
+```
+

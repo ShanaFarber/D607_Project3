@@ -1,5 +1,5 @@
 ---
-title: "DATA 607 - Project 3"
+title: "DATA 607 - Project 3 - Data Cleaning / Tidying / Aggregation"
 author: "Shoshana Farber"
 date: "2023-03-09"
 output: html_document
