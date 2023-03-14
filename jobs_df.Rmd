@@ -1,0 +1,116 @@
+---
+title: "jobs_df"
+author: "our group"
+date: "2023-03-14"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Load required packages
+library(tidyverse)
+```
+
+
+```{r}
+# Read in the three datasets
+nycjobs <- read.csv("data/NYC_Jobs-2.csv")
+usajobs <- read.csv("data/data_analyst_usa_jobs.csv")
+aijobs <- read.csv("data/aiJobsDf.csv")
+```
+
+
+```{r}
+names(nycjobs)
+```
+
+```{r}
+names(usajobs)
+```
+
+
+```{r}
+names(aijobs)
+```
+
+
+```{r}
+# extract necessary columns
+nycjobs <- NYC_Jobs_2 %>%
+  select(`Job ID`, `Business Title`, `Job Description`, `Salary Range From`, `Salary Range To`, `Work Location`)
+
+```
+
+
+```{r}
+names(nycjobs)
+```
+
+```{r}
+# Add a column to identify the source of the job listing
+nycjobs$source <- "nycjobs"
+usajobs$source <- "usajobs"
+aijobs$source <- "aijobs"
+```
+
+
+
+
+```{r}
+# Select the common columns from each dataset and rename as necessary
+nycjobs_selected <- nycjobs[, c("Job ID", "Business Title", "Job Description", "Salary Range From", "Salary Range To", "Work Location")]
+colnames(nycjobs_selected) <- c("job_id", "job_title", "job_description", "salary_min", "salary_max", "job_location")
+
+# Select the common columns from usajobs and rename them
+usajobs_selected <- usajobs[, c("job_title", "job_url", "job_location", "job_summary", "job_salary")]
+colnames(usajobs_selected) <- c("job_title", "job_url", "job_location", "job_description", "salary_range")
+
+# Select the common columns from aijobs and rename them
+aijobs_selected <- aijobs[, c("url", "description", "location", "pay_level")]
+colnames(aijobs_selected) <- c("job_url", "job_description", "job_location", "salary_range")
+
+# Add a column to identify the source of the job listing
+nycjobs_selected$source <- "nycjobs"
+usajobs_selected$source <- "usajobs"
+aijobs_selected$source <- "aijobs"
+
+```
+
+
+```{r}
+names(nycjobs_selected)
+```
+
+```{r}
+names(aijobs_selected)
+```
+
+
+```{r}
+names(usajobs_selected)
+```
+
+
+
+
+```{r}
+
+# Combine the datasets row-wise using rbind
+combined_data <- rbind(nycjobs_selected, usajobs_selected, aijobs_selected)
+
+# Extract necessary columns
+jobs_df <- combined_data %>%
+  select(job_id, job_title, job_location, job_description, salary_range, source) %>%
+  mutate(salary_min = as.numeric(str_extract(salary_range, "\\d+(,\\d+)*(\\.\\d+)?")),
+         salary_max = as.numeric(str_extract(salary_range, "(\\d+(,\\d+)*(\\.\\d+)?)(?=\\s?-))"),
+         salary_currency = str_extract(salary_range, "\\p{Sc}")) %>%
+  select(-salary_range) # Remove salary_range column
+
+```
+
+
+
+
