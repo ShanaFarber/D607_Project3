@@ -270,8 +270,8 @@ skills <- ai_jobs_skills %>%
 
 Create separate CSV files for each required data frame to be analyzed. This will allow for quick loading for the analysis. 
 
-```{r write-csvs eval=F}
-write.csv(job_listings, "C:/Users/Shoshana/Documents/CUNY SPS/D607_Project3/output/job_listings.csv", row.names=F)
+```{r write-csvs, eval=F}
+write.csv(job_listings, "output/job_listings.csv", row.names=F)
 
-write.csv(skills, "C:/Users/Shoshana/Documents/CUNY SPS/D607_Project3/output/skills.csv", row.names=F)
+write.csv(skills, "output/skills.csv", row.names=F)
 ```
