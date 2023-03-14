@@ -43,8 +43,8 @@ aijobs <- aijobs %>%
          pay_high = case_when(is.na(pay_high) ~ 0,
                               TRUE ~ as.integer(pay_high)*1000),
          
-         suppressWarnings({
-         years_exp = str_extract_all(description, 
+         years_exp = suppressWarnings({
+           str_extract_all(description, 
                         paste0('[0-9]{1,2}(?=(.){0,2}',
                                '\\s+(\\b[a-z]+\\b\\s+){0,3}(years|year)',
                                '\\s+(\\b[a-z]+\\b\\s+){0,3}experience)')) %>%
