@@ -1,0 +1,22 @@
+---
+title: "Matching jobs and skills"
+author: "Keith Colella"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, message=FALSE}
+library(tidyverse)
+```
+
+## Read in data
+
+```{r}
+job_listings <- read_csv('output/job_listings.csv')
+skills <- read_csv('output/skills.csv')
+```
+
+```{r}
+filter(job_listings, website == 'data.cityofnewyork.us') 
+```
+
