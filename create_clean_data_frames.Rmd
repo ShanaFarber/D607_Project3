@@ -254,18 +254,20 @@ nyc_jobs_skills <- data.frame("job_id_and_skill" = job_id_and_skill) %>%
   separate(col = job_id_and_skill, into = c("job_id", "skill"), sep = ",")
 ```
 
-## Creating CSVs for Each Data Frame
+## Combining Data Frames
+
+
 
 Create separate CSV files for each required data frame to be analyzed. This will allow for quick loading for the analysis. 
 
 ```{r write-csvs}
 # csvs for jobs data frames
-write.csv(ai_jobs_cleaned, "C:/Users/Shoshana/Documents/CUNY SPS/D607_Project3/output/ai_jobs.csv")
-write.csv(usa_jobs_cleaned, "C:/Users/Shoshana/Documents/CUNY SPS/D607_Project3/output/usa_jobs.csv")
-write.csv(nyc_jobs_cleaned, "C:/Users/Shoshana/Documents/CUNY SPS/D607_Project3/output/nyc_jobs.csv")
+write.csv(ai_jobs_cleaned, "C:/Users/Shoshana/Documents/CUNY SPS/D607_Project3/output/ai_jobs.csv", row.names=F)
+write.csv(usa_jobs_cleaned, "C:/Users/Shoshana/Documents/CUNY SPS/D607_Project3/output/usa_jobs.csv", row.names=F)
+write.csv(nyc_jobs_cleaned, "C:/Users/Shoshana/Documents/CUNY SPS/D607_Project3/output/nyc_jobs.csv", row.names=F)
 
 # csvs for skills data frames
-write.csv(ai_jobs_skills, "C:/Users/Shoshana/Documents/CUNY SPS/D607_Project3/output/ai_jobs_skills.csv")
-write.csv(usa_jobs_skills, "C:/Users/Shoshana/Documents/CUNY SPS/D607_Project3/output/usa_jobs_skills.csv")
-write.csv(nyc_jobs_skills, "C:/Users/Shoshana/Documents/CUNY SPS/D607_Project3/output/nyc_jobs_skills.csv")
+write.csv(ai_jobs_skills, "C:/Users/Shoshana/Documents/CUNY SPS/D607_Project3/output/ai_jobs_skills.csv", row.names=F)
+write.csv(usa_jobs_skills, "C:/Users/Shoshana/Documents/CUNY SPS/D607_Project3/output/usa_jobs_skills.csv", row.names=F)
+write.csv(nyc_jobs_skills, "C:/Users/Shoshana/Documents/CUNY SPS/D607_Project3/output/nyc_jobs_skills.csv", row.names=F)
 ```
