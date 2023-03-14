@@ -19,7 +19,7 @@ library(DT)
 # ai jobs web scrape csv
 ai_jobs <- read.csv(url("https://raw.githubusercontent.com/ShanaFarber/D607_Project3/main/data/aiJobsDf.csv"), na.strings = c(""))
 
-# usa jobs web scrapre csvs
+# usa jobs web scrape csvs
 usa_jobs_data_analyst <- read.csv(url("https://raw.githubusercontent.com/kac624/D607_Project3/main/data/data_analyst_usa_jobs.csv"), na.strings = c(""))
 
 usa_jobs_data_scientist <- read.csv(url("https://raw.githubusercontent.com/kac624/D607_Project3/main/data/data_scientist_usa_jobs.csv"), na.strings = c(""))
@@ -256,18 +256,22 @@ nyc_jobs_skills <- data.frame("job_id_and_skill" = job_id_and_skill) %>%
 
 ## Combining Data Frames
 
+To create a full data frame of all the job listing and all the skills, combine the jobs data sets into `job_listings` and the skills data sets into `skills`.
 
+```{r}
+job_listings <- ai_jobs_cleaned %>%
+  rbind(usa_jobs_cleaned) %>%
+  rbind(nyc_jobs_cleaned)
+
+skills <- ai_jobs_skills %>%
+  rbind(usa_jobs_skills) %>%
+  rbind(nyc_jobs_skills)
+```
 
 Create separate CSV files for each required data frame to be analyzed. This will allow for quick loading for the analysis. 
 
 ```{r write-csvs}
-# csvs for jobs data frames
-write.csv(ai_jobs_cleaned, "C:/Users/Shoshana/Documents/CUNY SPS/D607_Project3/output/ai_jobs.csv", row.names=F)
-write.csv(usa_jobs_cleaned, "C:/Users/Shoshana/Documents/CUNY SPS/D607_Project3/output/usa_jobs.csv", row.names=F)
-write.csv(nyc_jobs_cleaned, "C:/Users/Shoshana/Documents/CUNY SPS/D607_Project3/output/nyc_jobs.csv", row.names=F)
+write.csv(job_listings, "C:/Users/Shoshana/Documents/CUNY SPS/D607_Project3/output/job_listings.csv", row.names=F)
 
-# csvs for skills data frames
-write.csv(ai_jobs_skills, "C:/Users/Shoshana/Documents/CUNY SPS/D607_Project3/output/ai_jobs_skills.csv", row.names=F)
-write.csv(usa_jobs_skills, "C:/Users/Shoshana/Documents/CUNY SPS/D607_Project3/output/usa_jobs_skills.csv", row.names=F)
-write.csv(nyc_jobs_skills, "C:/Users/Shoshana/Documents/CUNY SPS/D607_Project3/output/nyc_jobs_skills.csv", row.names=F)
+write.csv(skills, "C:/Users/Shoshana/Documents/CUNY SPS/D607_Project3/output/skills.csv", row.names=F)
 ```
