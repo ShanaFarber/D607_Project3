@@ -19,9 +19,6 @@ library(DT)
 # ai jobs web scrape csv
 ai_jobs <- read.csv(url("https://raw.githubusercontent.com/ShanaFarber/D607_Project3/main/data/aiJobsDf.csv"), na.strings = c(""))
 
-# nyc jobs csv download
-nyc_jobs <- read.csv(url("https://raw.githubusercontent.com/ShanaFarber/D607_Project3/main/data/NYC_Jobs-2.csv"), na.strings = c(""))
-
 # usa jobs web scrapre csvs
 usa_jobs_data_analyst <- read.csv(url("https://raw.githubusercontent.com/kac624/D607_Project3/main/data/data_analyst_usa_jobs.csv"), na.strings = c(""))
 
@@ -29,6 +26,9 @@ usa_jobs_data_scientist <- read.csv(url("https://raw.githubusercontent.com/kac62
 
 # combine usa jobs
 usa_jobs <- rbind(usa_jobs_data_analyst, usa_jobs_data_scientist)
+
+# nyc jobs csv download
+nyc_jobs <- read.csv(url("https://raw.githubusercontent.com/ShanaFarber/D607_Project3/main/data/NYC_Jobs-2.csv"), na.strings = c(""))
 ```
 
 ## Cleaning Up
@@ -71,12 +71,10 @@ ai_jobs_cleaned <- ai_jobs_cleaned %>%
   transmute(job_id,
             job_title,
             location, 
-            job_type,
-            job_level,
             salary_currency,
             salary_min,
             salary_max,
-            tags,
+            "job_quals" = tags,
             "website" = "ai-jobs.net")
 ```
 
@@ -86,14 +84,14 @@ Using the `job_id` we created a separate data frame with the skills from each jo
 ########## extract skills from tags ##############
 
 # create a list of the skills from each job posting
-jobs_skills <- str_split(ai_jobs_cleaned$tags, ";(\\s)?")
+jobs_skills <- str_split(ai_jobs_cleaned$job_quals, ";(\\s)?")
 
 # loop through each listing to split up all the skills and put it in a separate data frame
 for (job in 1:length(ai_jobs_cleaned$job_id)) {
   temp_skills <- unlist(jobs_skills[job])
   
   temp <- data.frame("job_id" = rep(ai_jobs_cleaned$job_id[job], length(temp_skills)),
-                     "skills" = temp_skills)
+                     "skill" = temp_skills)
   
   if (job == 1) {
     ai_jobs_skills <- temp
@@ -110,23 +108,30 @@ I tried to create a dictionary of skills from different sources to match up skil
 I first initialized a dictionary with the skills extracted from the AI Jobs listings.
 
 ```{r}
-skills_dictionary <- unique(ai_jobs_skills$skills)
+skills_dictionary <- unique(ai_jobs_skills$skill)
 ```
 
-I the combined this with a data set of skills that I found online:
+I the combined this with a data set of skills that I found online and one that I created:
 
 ```{r}
-# load skills csv
+# load skills csvs
 skills <- read.csv(url("https://raw.githubusercontent.com/ShanaFarber/D607_Project3/main/data/public_use-industry-skills-needs.csv"), na.strings = c(""))
+
+more_skills <- read.csv(url("https://raw.githubusercontent.com/ShanaFarber/D607_Project3/main/data/more_skills.csv"))
 
 # clean up and extract skills
 skills <-  unique(skills$skill_group_name)
 skills <- str_remove_all(skills, "\\(.+\\)")
+skills <- c(skills, more_skills$skill)
 
 # add to skills_dictionary and remove redundancy
 skills_dictionary <- c(skills_dictionary, skills)
 skills_dictionary <- unique(skills_dictionary)
 skills_dictionary <- skills_dictionary[!is.na(skills_dictionary)]
+skills_dictionary <- skills_dictionary[!skills_dictionary == "Mining"]
+
+# making sure there is no duplicate (based on capitalization)
+length(unique(tolower(skills_dictionary))) == length(skills_dictionary)
 ```
 
 [Source](https://datacatalog.worldbank.org/search/dataset/0038027).
@@ -155,7 +160,8 @@ usa_jobs_cleaned <- usa_jobs_cleaned %>%
             salary_min,
             salary_max,
             job_quals,
-            "website" = "usajobs.gov")
+            "website" = "usajobs.gov") %>%
+  filter(!duplicated(job_id))
 ```
 
 Trying to extract the skills from the job qualifications:
@@ -163,21 +169,24 @@ Trying to extract the skills from the job qualifications:
 ```{r}
 job_id_and_skill <- c()
 
+# if checking for R (programming language) or data visualization 
+vis_and_r_check <- c("R"=" R ", "Data visualization"="visual")
+
 for(i in 1:length(usa_jobs_cleaned$job_id)) {
   job_id <- usa_jobs_cleaned$job_id[i]
   
   for (j in 1:length(skills_dictionary)) {
     pat <- skills_dictionary[j]
     
-    if (pat != "R") {
+    if (!pat %in% names(vis_and_r_check)) {
       if (str_detect(tolower(usa_jobs_cleaned$job_quals[i]), tolower(pat))) {
       job_id_and_skill <- append(job_id_and_skill, paste(job_id, pat, sep = ","))
       }
     } else {
-      pat <- " R "
+      new_pat <- vis_and_r_check[pat]
       
-      if (str_detect(tolower(usa_jobs_cleaned$job_quals[i]), tolower(pat))) {
-      job_id_and_skill <- append(job_id_and_skill, paste(job_id, "R", sep = ","))
+      if (str_detect(tolower(usa_jobs_cleaned$job_quals[i]), tolower(new_pat))) {
+      job_id_and_skill <- append(job_id_and_skill, paste(job_id, pat, sep = ","))
       }
     }
     
@@ -187,4 +196,76 @@ for(i in 1:length(usa_jobs_cleaned$job_id)) {
 
 usa_jobs_skills <- data.frame("job_id_and_skill" = job_id_and_skill) %>%
   separate(col = job_id_and_skill, into = c("job_id", "skill"), sep = ",")
-``` 
+```
+
+### NYC Jobs
+
+```{r}
+# change column titles to snake_case
+names(nyc_jobs) <- to_snake_case(names(nyc_jobs))
+
+nyc_jobs_filtered <- nyc_jobs %>% 
+  filter(str_detect(tolower(business_title), "data")) %>%
+  filter(str_detect(tolower(business_title), "(analyst|engineer|developer|scientist)"))
+
+nyc_jobs_cleaned <- nyc_jobs_filtered %>%
+  transmute(job_id,
+            "job_title" = business_title,
+            "location" = work_location, 
+            salary_currency = "USD",
+            "salary_min" = salary_range_from,
+            "salary_max" = salary_range_to,
+            "job_quals" = preferred_skills,
+            "website" = "data.cityofnewyork.us") %>%
+  filter(!is.na(job_quals))
+```
+
+Using the same iteration as above to extract the skills from `job_quals`:
+
+```{r}
+job_id_and_skill <- c()
+
+# if checking for R (programming language) or data visualization 
+vis_and_r_check <- c("R"=" R(\\s|,|\\\\)", "Data visualization"="visual")
+
+for(i in 1:length(nyc_jobs_cleaned$job_id)) {
+  job_id <- nyc_jobs_cleaned$job_id[i]
+  
+  for (j in 1:length(skills_dictionary)) {
+    pat <- skills_dictionary[j]
+    
+    if (!pat %in% names(vis_and_r_check)) {
+      if (str_detect(tolower(nyc_jobs_cleaned$job_quals[i]), tolower(pat))) {
+      job_id_and_skill <- append(job_id_and_skill, paste(job_id, pat, sep = ","))
+      }
+    } else {
+      new_pat <- vis_and_r_check[pat]
+      
+      if (str_detect(tolower(nyc_jobs_cleaned$job_quals[i]), tolower(new_pat))) {
+      job_id_and_skill <- append(job_id_and_skill, paste(job_id, pat, sep = ","))
+      }
+    }
+    
+    
+  }
+}
+
+nyc_jobs_skills <- data.frame("job_id_and_skill" = job_id_and_skill) %>%
+  separate(col = job_id_and_skill, into = c("job_id", "skill"), sep = ",")
+```
+
+## Creating CSVs for Each Data Frame
+
+Create separate CSV files for each required data frame to be analyzed. This will allow for quick loading for the analysis. 
+
+```{r write-csvs}
+# csvs for jobs data frames
+write.csv(ai_jobs_cleaned, "C:/Users/Shoshana/Documents/CUNY SPS/D607_Project3/output/ai_jobs.csv")
+write.csv(usa_jobs_cleaned, "C:/Users/Shoshana/Documents/CUNY SPS/D607_Project3/output/usa_jobs.csv")
+write.csv(nyc_jobs_cleaned, "C:/Users/Shoshana/Documents/CUNY SPS/D607_Project3/output/nyc_jobs.csv")
+
+# csvs for skills data frames
+write.csv(ai_jobs_skills, "C:/Users/Shoshana/Documents/CUNY SPS/D607_Project3/output/ai_jobs_skills.csv")
+write.csv(usa_jobs_skills, "C:/Users/Shoshana/Documents/CUNY SPS/D607_Project3/output/usa_jobs_skills.csv")
+write.csv(nyc_jobs_skills, "C:/Users/Shoshana/Documents/CUNY SPS/D607_Project3/output/nyc_jobs_skills.csv")
+```
