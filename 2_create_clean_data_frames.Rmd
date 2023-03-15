@@ -141,38 +141,50 @@ skills_dictionary <- skills_dictionary[!skills_dictionary == "Matlab"]
 length(unique(tolower(skills_dictionary))) == length(skills_dictionary)
 ```
 
+I then created a function to cross check the skills in the dictionary against the job descriptions from the job listings. 
+
+#### Function for Extracting Skills
+
+```{r skills-extract-func}
+extractSkills <- function(job_df, dict) {
+  job_id_and_skill <- c()
+  
+  # checking for R (programming language) or broader language use
+  vis_and_r_check <- c("R"="(\\s|\\\\)R(\\s|,|\\\\)", "Data visualization"="visual", "Data collection" = "(Data collection|collect data)", "Data analysis" = "(Data analysis|analyze data)", "Communication" = "(Communication|communicate)", "Collaboration" = "(Collaboration|collaborate)", "C" = "(\\s|\\\\)C(\\s|,|\\\\)", "C\\+\\+" = "C\\+\\+")
+
+  for(i in 1:length(job_df$job_id)) {
+    job_id <- job_df$job_id[i]
+  
+    for (j in 1:length(dict)) {
+      pat <- dict[j]
+    
+      if (!pat %in% names(vis_and_r_check)) {
+        if (str_detect(tolower(job_df$job_quals[i]), tolower(pat))) {
+        job_id_and_skill <- append(job_id_and_skill, paste(job_id, pat, sep = ","))
+        }
+      } else {
+        new_pat <- vis_and_r_check[pat]
+      
+        if (str_detect(tolower(job_df$job_quals[i]), tolower(new_pat))) {
+        job_id_and_skill <- append(job_id_and_skill, paste(job_id, pat, sep = ","))
+        }
+      }
+    
+    
+    }
+  }
+
+  skills_df <- data.frame("job_id_and_skill" = job_id_and_skill) %>%
+    separate(col = job_id_and_skill, into = c("job_id", "skill"), sep = ",")
+  
+  return(skills_df)
+}
+```
+
 I then cross-checked `skills_dictionary` against `job_description` for AI Jobs to see if there were any more skills within the descriptions for listings that were not included in the tags.
 
 ```{r ai-jobs-skills}
-job_id_and_skill <- c()
-
-# if checking for R (programming language) or data visualization 
-vis_and_r_check <- c("R"=" R ", "Data visualization"="visual", "Data collection" = "(Data collection|collect data)", "Data analysis" = "(Data analysis|analyze data)", "Communication" = "(Communication|communicate)", "Collaboration" = "(Collaboration|collaborate)")
-
-for(i in 1:length(ai_jobs_cleaned$job_id)) {
-  job_id <- ai_jobs_cleaned$job_id[i]
-  
-  for (j in 1:length(skills_dictionary)) {
-    pat <- skills_dictionary[j]
-    
-    if (!pat %in% names(vis_and_r_check)) {
-      if (str_detect(tolower(ai_jobs_cleaned$job_quals[i]), tolower(pat))) {
-      job_id_and_skill <- append(job_id_and_skill, paste(job_id, pat, sep = ","))
-      }
-    } else {
-      new_pat <- vis_and_r_check[pat]
-      
-      if (str_detect(tolower(ai_jobs_cleaned$job_quals[i]), tolower(new_pat))) {
-      job_id_and_skill <- append(job_id_and_skill, paste(job_id, pat, sep = ","))
-      }
-    }
-    
-    
-  }
-}
-
-ai_jobs_skills2 <- data.frame("job_id_and_skill" = job_id_and_skill) %>%
-  separate(col = job_id_and_skill, into = c("job_id", "skill"), sep = ",")
+ai_jobs_skills2 <- extractSkills(ai_jobs_cleaned, skills_dictionary)
 
 # full join to original skills df to add additional skills without repeating
 ai_jobs_skills <- full_join(ai_jobs_skills, ai_jobs_skills2, by = c("job_id", "skill"))
