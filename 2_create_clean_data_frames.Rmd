@@ -147,7 +147,7 @@ I then cross-checked `skills_dictionary` against `job_description` for AI Jobs t
 job_id_and_skill <- c()
 
 # if checking for R (programming language) or data visualization 
-vis_and_r_check <- c("R"=" R ", "Data visualization"="visual", "Data collection" = "(Data collection|collect data)", "Data analysis" = "(Data analysis|analyze data)")
+vis_and_r_check <- c("R"=" R ", "Data visualization"="visual", "Data collection" = "(Data collection|collect data)", "Data analysis" = "(Data analysis|analyze data)", "Communication" = "(Communication|communicate)", "Collaboration" = "(Collaboration|collaborate)")
 
 for(i in 1:length(ai_jobs_cleaned$job_id)) {
   job_id <- ai_jobs_cleaned$job_id[i]
@@ -218,7 +218,7 @@ To extract the skills, I combined `job_quals` and `job_description` to account f
 job_id_and_skill <- c()
 
 # if checking for R (programming language) or data visualization 
-vis_and_r_check <- c("R"=" R ", "Data visualization"="visual", "Data collection" = "(Data collection|collect data)", "Data Analysis" = "(Data Analysis|analyze data)")
+vis_and_r_check <- c("R"=" R ", "Data visualization"="visual", "Data collection" = "(Data collection|collect data)", "Data analysis" = "(Data analysis|analyze data)", "Communication" = "(Communication|communicate)", "Collaboration" = "(Collaboration|collaborate)")
 
 for(i in 1:length(usa_jobs_cleaned$job_id)) {
   job_id <- usa_jobs_cleaned$job_id[i]
@@ -279,7 +279,7 @@ Using the same iteration as above to extract the skills from `job_quals` and `jo
 job_id_and_skill <- c()
 
 # if checking for R (programming language) or data visualization 
-vis_and_r_check <- c("R"=" R(\\s|,|\\\\)", "Data visualization"="visual", "Data collection" = "(Data collection|collect data)", "Data Analysis" = "(Data Analysis|analyze data)")
+vis_and_r_check <- c("R"=" R ", "Data visualization"="visual", "Data collection" = "(Data collection|collect data)", "Data analysis" = "(Data analysis|analyze data)", "Communication" = "(Communication|communicate)", "Collaboration" = "(Collaboration|collaborate)")
 
 for(i in 1:length(nyc_jobs_cleaned$job_id)) {
   job_id <- nyc_jobs_cleaned$job_id[i]
