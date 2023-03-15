@@ -101,3 +101,121 @@ for (loc in c('New York', 'Remote', 'France')) {
 }
 ```
 
+
+Group the data by the skills column and count the number of counts for each skill:
+
+```{r}
+skill_counts <- jobs_long %>%
+  group_by(skills) %>%
+  summarize(counts = n(), .groups = 'keep')
+
+```
+
+
+Filter out any skills that you don't want to include in the plot
+
+```{r}
+overweighted <- c("data", "analyst", "analysis", "analytics","big data","business analytics", "data")
+skill_counts <- skill_counts[!grepl(paste(overweighted, collapse="|"), skill_counts$skills), ]
+
+```
+
+
+Sort the data by the number of citations in descending order and select the top 50 most cited skills
+
+```{r}
+skill_counts <- skill_counts %>%
+  arrange(desc(counts)) %>%
+  head(50)
+
+```
+
+
+
+Create the plot using ggplot2 and ggwordcloud packages
+
+```{r}
+library(ggplot2)
+library(ggwordcloud)
+
+ggplot(skill_counts, aes(label = skills, size = counts, color = factor(sample.int(8, nrow(skill_counts), replace = TRUE)))) +
+  geom_text_wordcloud() +
+  scale_size_area(max_size = 10) +
+  theme_minimal()
+
+```
+
+Most frequently counted skills for job listings with at least 5 years of experience
+
+```{r}
+exp5_skill_counts <- jobs_long %>%
+  filter(years_exp >= 5) %>%
+  group_by(skills) %>%
+  summarize(counts = n(), .groups = 'keep')
+
+ggplot(exp5_skill_counts, aes(label = skills, size = counts, color = factor(sample.int(8, nrow(exp5_skill_counts), replace = TRUE)))) +
+  geom_text_wordcloud() +
+  scale_size_area(max_size = 15) +
+  theme_minimal()
+
+```
+
+
+```{r}
+ggplot(jobs_long, aes(x = years_exp, y = salary_max, color = highest_ed)) +
+  geom_point(alpha = 0.6) +
+  scale_y_continuous(labels = scales::comma) +
+  labs(x = 'Years of experience', y = 'Maximum salary', color = 'Education level')
+
+```
+
+
+
+```{r}
+library(ggplot2)
+library(ggwordcloud)
+
+# Plot a histogram of salaries by highest education level
+ggplot(jobs_long, aes(x = salary_max, fill = highest_ed)) +
+  geom_histogram(binwidth = 20000, alpha = 0.7) +
+  scale_x_continuous(label = scales::comma, limits = c(0, 500000)) +
+  scale_fill_brewer(type = "qual", palette = "Set1") +
+  labs(title = "Distribution of maximum salaries by highest education level",
+       x = "Salary (USD)", y = "Count")
+
+# Plot a scatterplot of salary versus years of experience, colored by location
+ggplot(jobs_long, aes(x = years_exp, y = salary_max, color = location)) +
+  geom_point(alpha = 0.7) +
+  scale_x_continuous(limits = c(0, 20)) +
+  scale_y_continuous(label = scales::comma, limits = c(0, 500000)) +
+  labs(title = "Salary versus years of experience, by location",
+       x = "Years of experience", y = "Salary (USD)")
+
+# Plot a word cloud of the most frequently cited skills
+skills_freq <- jobs_long %>%
+  count(skills) %>%
+  arrange(desc(n)) %>%
+  head(100)
+ggplot(skills_freq, aes(label = skills, size = n)) +
+  geom_text_wordcloud() +
+  theme_minimal() +
+  labs(title = "Most frequently cited skills")
+
+# Plot a bar chart of the number of job listings per website
+ggplot(jobs_long, aes(x = website)) +
+  geom_bar(fill = "steelblue") +
+  coord_flip() +
+  labs(title = "Number of job listings per website",
+       x = "Website", y = "Count")
+
+# Plot a stacked bar chart of the number of job listings by location and highest education level
+ggplot(jobs_long, aes(x = highest_ed, fill = location)) +
+  geom_bar() +
+  labs(title = "Number of job listings by location and highest education level",
+       x = "Highest education level", y = "Count") +
+  theme(legend.position = "bottom")
+
+```
+
+
+
