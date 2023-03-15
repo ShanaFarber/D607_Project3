@@ -227,36 +227,7 @@ usa_jobs_cleaned <- usa_jobs_cleaned %>%
 To extract the skills, I combined `job_quals` and `job_description` to account for all places where there might be any skills listed. 
 
 ```{r usa-jobs-skills}
-job_id_and_skill <- c()
-
-# if checking for R (programming language) or data visualization 
-vis_and_r_check <- c("R"=" R ", "Data visualization"="visual", "Data collection" = "(Data collection|collect data)", "Data analysis" = "(Data analysis|analyze data)", "Communication" = "(Communication|communicate)", "Collaboration" = "(Collaboration|collaborate)")
-
-for(i in 1:length(usa_jobs_cleaned$job_id)) {
-  job_id <- usa_jobs_cleaned$job_id[i]
-  job_quals_and_desc <- paste(usa_jobs_cleaned$job_quals[i], usa_jobs_cleaned$job_description[i])
-  
-  for (j in 1:length(skills_dictionary)) {
-    pat <- skills_dictionary[j]
-    
-    if (!pat %in% names(vis_and_r_check)) {
-      if (str_detect(tolower(job_quals_and_desc), tolower(pat))) {
-      job_id_and_skill <- append(job_id_and_skill, paste(job_id, pat, sep = ","))
-      }
-    } else {
-      new_pat <- vis_and_r_check[pat]
-      
-      if (str_detect(tolower(job_quals_and_desc), tolower(new_pat))) {
-      job_id_and_skill <- append(job_id_and_skill, paste(job_id, pat, sep = ","))
-      }
-    }
-    
-    
-  }
-}
-
-usa_jobs_skills <- data.frame("job_id_and_skill" = job_id_and_skill) %>%
-  separate(col = job_id_and_skill, into = c("job_id", "skill"), sep = ",")
+usa_jobs_skills <- extractSkills(usa_jobs_cleaned, skills_dictionary)
 
 # check for possible redundancy
 length(unique(usa_jobs_skills)$job_id) == length(usa_jobs_skills$job_id)
@@ -275,7 +246,7 @@ nyc_jobs_filtered <- nyc_jobs %>%
 nyc_jobs_cleaned <- nyc_jobs_filtered %>%
   transmute(job_id,
             "job_title" = business_title,
-            "location" = "NY",
+            "location" = "New York",
             salary_currency = "USD",
             "salary_min" = salary_range_from,
             "salary_max" = salary_range_to,
@@ -288,36 +259,7 @@ nyc_jobs_cleaned <- nyc_jobs_filtered %>%
 Using the same iteration as above to extract the skills from `job_quals` and `job_qualifications`:
 
 ```{r nyc-jobs-skills}
-job_id_and_skill <- c()
-
-# if checking for R (programming language) or data visualization 
-vis_and_r_check <- c("R"=" R ", "Data visualization"="visual", "Data collection" = "(Data collection|collect data)", "Data analysis" = "(Data analysis|analyze data)", "Communication" = "(Communication|communicate)", "Collaboration" = "(Collaboration|collaborate)")
-
-for(i in 1:length(nyc_jobs_cleaned$job_id)) {
-  job_id <- nyc_jobs_cleaned$job_id[i]
-  
-  for (j in 1:length(skills_dictionary)) {
-    pat <- skills_dictionary[j]
-    job_quals_and_desc <- paste(usa_jobs_cleaned$job_quals[i], usa_jobs_cleaned$job_description[i])
-    
-    if (!pat %in% names(vis_and_r_check)) {
-      if (str_detect(tolower(job_quals_and_desc), tolower(pat))) {
-      job_id_and_skill <- append(job_id_and_skill, paste(job_id, pat, sep = ","))
-      }
-    } else {
-      new_pat <- vis_and_r_check[pat]
-      
-      if (str_detect(tolower(job_quals_and_desc), tolower(new_pat))) {
-      job_id_and_skill <- append(job_id_and_skill, paste(job_id, pat, sep = ","))
-      }
-    }
-    
-    
-  }
-}
-
-nyc_jobs_skills <- data.frame("job_id_and_skill" = job_id_and_skill) %>%
-  separate(col = job_id_and_skill, into = c("job_id", "skill"), sep = ",")
+nyc_jobs_skills <- extractSkills(nyc_jobs_cleaned, skills_dictionary)
 
 # check for redundancy
 length(unique(nyc_jobs_skills)$job_id) == length(nyc_jobs_skills$job_id)
