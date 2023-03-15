@@ -275,7 +275,7 @@ nyc_jobs_filtered <- nyc_jobs %>%
 nyc_jobs_cleaned <- nyc_jobs_filtered %>%
   transmute(job_id,
             "job_title" = business_title,
-            "location" = "New York",
+            "location" = "NY",
             salary_currency = "USD",
             "salary_min" = salary_range_from,
             "salary_max" = salary_range_to,

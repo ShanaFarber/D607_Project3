@@ -7,6 +7,7 @@ output: html_document
 
 ```{r setup, message=FALSE}
 library(tidyverse)
+library(countrycode)
 ```
 
 ## Read in data
@@ -51,7 +52,15 @@ job_listings <- job_listings %>%
              map(~ifelse(.x >= 20, 0, .x)) %>%
              map_dbl(max) %>%
              ifelse( (. == -Inf | . == 0), NA, .)
-           })
+           }),
+         
+         continent = case_when(str_detect(location, '[A-Z]{2}') ~ 'Americas',
+                               location == 'Remote' ~ 'Remote',
+                               TRUE ~ countrycode(sourcevar = location,
+                                                  origin = 'country.name',
+                                                  destination = 'continent')),
+         country = case_when(str_detect(location, '[A-Z]{2}') ~ 'United States',
+                             TRUE ~ location)
          ) %>%
   select(-combo_details)
 ```
@@ -81,8 +90,8 @@ We now can write the two dataframes to csv.
 
 ```{r}
 #### Unable to write df with list-column to csv. Need to consider solutions.
-# write.csv(job_listings_skills, "output/job_listings_skills.csv", row.names = FALSE)
 
+write.csv(job_listings, "output/job_listings_enhanced.csv", row.names = FALSE)
 write.csv(job_listings_skills_long, "output/job_listings_skills_long.csv", row.names = FALSE)
 ```
 
@@ -107,5 +116,9 @@ for (source in unique(job_listings_skills_long$website)) {
     head(15) %>%
     print()
 }
+```
+
+```{r}
+job_listings[job_listings$job_id == 37018, 'job_description']
 ```
 
