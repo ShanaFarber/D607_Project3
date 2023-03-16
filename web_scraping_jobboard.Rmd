@@ -1,0 +1,49 @@
+---
+title: "Web scraping on job board for data analysts"
+author: "Rstudio"
+date: "2023-03-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Web scraping  on the website which Kayleah provided. 
+
+(website)[https://www.dataanalyst.com/]
+
+
+
+```{r}
+library(rvest)
+
+url <- 'https://www.dataanalyst.com'
+
+html <- read_html(url)
+
+divs <- html %>%
+  html_nodes("div.job-board-wrapper")
+
+divs_text <- divs %>%
+  html_text()
+
+divs_text
+```
+
+
+```{r}
+# Create empty data frame with column names
+job_data <- data.frame(job_title = character(),
+                       company_name = character(),
+                       country = character(),
+                       location = character(),
+                       workplace = character(),
+                       experience = character(),
+                       salary = character(),
+                       industry = character(),
+                       published_date = character(),
+                       stringsAsFactors = FALSE)
+
+```
+
