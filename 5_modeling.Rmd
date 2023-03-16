@@ -39,8 +39,7 @@ job_listings$years_exp[is.na(job_listings$years_exp)] <- mean(job_listings$years
 job_listings$salary_max[is.na(job_listings$salary_max)] <- mean(job_listings$salary_max, na.rm = TRUE)
 ```
 
-
-A scatter plot and linear regression line
+A scatter plot and linear regression line, along with box plots for categorical variables.
 
 ```{r}
 ggplot(job_listings, aes(x = years_exp, y = salary_max)) +
@@ -111,11 +110,11 @@ jobs_skills_matrix <- jobs_long %>%
          which(colSums(., na.rm = TRUE) > 1000),
          -ed_NA,
          -loc_NA,
-         -salary_min,
-         -job_id)
+         -salary_min)%>%
+  column_to_rownames(., var = 'job_id')
 
-colnames(jobs_skills_matrix) <- str_replace_all(colnames(jobs_skills_matrix),
-                                                ' ', '_')
+colnames(jobs_skills_matrix) <- str_replace_all(
+  colnames(jobs_skills_matrix),' ', '_')
 
 head(jobs_skills_matrix)
 ```
@@ -149,9 +148,53 @@ data.frame(tree = 1:rf$ntree, rmse = sqrt(rf$mse)) %>%
   geom_line()
 ```
 
+## KNN Recommender
+
+TBD
+
+```{r}
+jobs_distances <- as.matrix(dist(jobs_skills_matrix, method="euclidean"))
+dim(jobs_distances)
+jobs_distances[1:10,1:10]
+```
+
+https://rpubs.com/ferranmt/80166
+
+```{r}
+knn <- function(i, distance_matrix, k = 5) {
+  neighbors <- data.frame(dist = distance_matrix[i,])
+  k_nearest_ids <- arrange(neighbors, dist) %>% 
+    slice(1:(k+1)) %>% 
+    rownames()
+  return(k_nearest_ids)
+}
+```
+
+
+```{r}
+knn('40867', jobs_distances)
+```
+
+
+```{r}
+test <- jobs_skills_matrix[100,]
+new_matrix <- rbind(jobs_skills_matrix, test)
+new_distances <- as.matrix(dist(new_matrix, method="euclidean"))
+last_row_name <- rownames(tail(new_distances,1))
+match_ids <- knn(last_row, new_distances, 5)
+match_ids <- result[result != last_row_name]
+match_ids
+
+job_listings[job_listings$job_id %in% match_ids,]
+```
+
+
+## Export
+
 Save matrix and model for use in Shiny app.
 
 ```{r}
 saveRDS(rf, 'salary_prediction/salary_rf.rds')
-write_csv(jobs_skills_matrix, 'salary_prediction/jobs_skills_matrix.csv')
+write.csv(jobs_skills_matrix, 'salary_prediction/jobs_skills_matrix.csv', row.names = FALSE)
+write.csv(jobs_skills_matrix, 'job_recommendations/jobs_skills_matrix.csv', row.names = TRUE)
 ```
