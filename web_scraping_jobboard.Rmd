@@ -19,20 +19,14 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(rvest)
-library(RCurl)
 library(XML)
 library(xml2)
-library(jsonlite)
 library(DT)
 library(tidyverse)
 ```
 
 
 ```{r}
-
-# library
-library(rvest)
-
 # read the website
 url <- "https://www.dataanalyst.com"
 webpage <- read_html(url)
@@ -52,7 +46,7 @@ div_texts <- html_text(div_elements)
 ```
 
 
-```{r}
+```{r }
 # print the text
 head(div_texts)
 ```
@@ -64,48 +58,30 @@ head(div_texts)
 # save it to data frame
 div_texts_df <- data.frame(text = div_texts, stringsAsFactors = FALSE)
 
-div_texts_df
+head (div_texts_df)
 ```
+
 
 ```{r}
-# create an empty data frame to store the results
-job_data <- data.frame(job_title = character(),
-                       company_name = character(),
-                       country = character(),
-                       location = character(),
-                       workplace = character(),
-                       experience = character(),
-                       salary = character(),
-                       industry = character(),
-                       published_date = character(),
-                       stringsAsFactors = FALSE)
-```
-
-
-
-```{r eval=FALSE}
-
-# loop through the job elements and extract the information
-for (i in 1:nrow(div_texts_df)) {
-  job_title <- html_text(html_nodes(read_html(div_texts_df[i, "text"]), "h3"))
-  company_name <- html_text(html_nodes(read_html(div_texts_df[i, "text"]), "p.company-name"))
-  country <- html_text(html_nodes(read_html(div_texts_df[i, "text"]), "p.job-location span:nth-child(1)"))
-  location <- html_text(html_nodes(read_html(div_texts_df[i, "text"]), "p.job-location span:nth-child(2)"))
-  workplace <- html_text(html_nodes(read_html(div_texts_df[i, "text"]), "p.job-location span:nth-child(3)"))
-  experience <- html_text(html_nodes(read_html(div_texts_df[i, "text"]), "p.job-exp"))
-  salary <- html_text(html_nodes(read_html(div_texts_df[i, "text"]), "p.job-salary"))
-  industry <- html_text(html_nodes(read_html(div_texts_df[i, "text"]), "p.job-industry"))
-  published_date <- html_text(html_nodes(read_html(div_texts_df[i, "text"]), "p.job-date"))
-
-  # add the information to the data frame
-  job_data <- rbind(job_data, data.frame(job_title, company_name, country, location, workplace, experience, salary, industry, published_date))
-}
-
+div_texts_df <- div_texts_df %>%
+  mutate(job_title = stringr::str_extract(text, "regex_pattern"))
 
 ```
 
 
+```{r}
+# extract company names and store them in a new column called company_name
+div_texts_df <- div_texts_df%>%
+  mutate(company_name = stringr::str_extract(text, "regex_pattern"))
 
+# extract job locations and store them in a new column called job_location
+div_texts_df <- div_texts_df%>%
+  mutate(job_location = stringr::str_extract(text, "regex_pattern"))
 
+# extract job descriptions and store them in a new column called job_description
+div_texts_df<- div_texts_df %>%
+  mutate(job_description = stringr::str_extract(text, "regex_pattern"))
+
+```
 
 
