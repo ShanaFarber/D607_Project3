@@ -7,9 +7,12 @@ output: html_document
 
 ```{r setup, message = FALSE}
 library(tidyverse)
+library(randomForest)
 ```
 
 ## Read in Data
+
+We loud in our previously constructed data frames. The `jobs_long` dataframe contains all jobs listings and associated skills. It's in the "long" format, so it cotnains significant duplication. The `job_listing` dataframe contains the same information but without the skills. As a result, there is no duplication, and each row constitutes a single observation (i.e. a single job listing).
 
 ```{r}
 jobs_long <- read_csv('output/job_listings_skills_long.csv')
@@ -17,19 +20,14 @@ job_listings <- read_csv('output/job_listings_enhanced.csv') %>%
   select(-job_quals, -job_description)
 ```
 
-
-
-### Modling 
+### Modeling 
 
 We need to use the is.na() function to check for missing or invalid values in each variable individually
-
 
 ```{r}
 sum(is.na(job_listings$salary_max))
 sum(is.na(job_listings$years_exp))
-
 ```
-
 
 Using mean imputation to replace the missing values with the mean value of the corresponding variable
 
@@ -39,28 +37,37 @@ job_listings$years_exp[is.na(job_listings$years_exp)] <- mean(job_listings$years
 
 # Replace missing values in salary_max with the mean value
 job_listings$salary_max[is.na(job_listings$salary_max)] <- mean(job_listings$salary_max, na.rm = TRUE)
-
 ```
 
 
 A scatter plot and linear regression line
 
 ```{r}
-library(ggplot2)
-
 ggplot(job_listings, aes(x = years_exp, y = salary_max)) +
   geom_point() +
   geom_smooth(method = "lm", se = FALSE) +
-  labs(x = "Years of Experience", y = "Maximum Salary")
+  labs(x = "Years of Experience", y = "Maximum Salary") +
+  scale_y_continuous(label = scales::comma)
 
+job_listings %>%
+  filter(!is.na(highest_ed)) %>%
+  ggplot(aes(highest_ed, salary_max)) + 
+  geom_boxplot() +
+  labs(x = "Level of Education", y = "Maximum Salary") +
+  scale_y_continuous(label = scales::comma)
+
+job_listings %>%
+  ggplot(aes(continent, salary_max)) + 
+  geom_boxplot() +
+  labs(x = "Location", y = "Maximum Salary") +
+  scale_y_continuous(label = scales::comma)
 ```
 
-linear regression model 
+We then fit our model and review results.
 
 ```{r}
 ols <- lm(salary_max ~ highest_ed + years_exp + continent, data = job_listings)
 summary(ols)
-
 ```
 
 
@@ -68,3 +75,83 @@ The model suggests that the predicted salary for an individual with 0 years of e
 
 The adjusted R-squared value of 0.1097 indicates that the predictors explain only about 10.97% of the variation in salary_max, which is relatively low. The p-value of < 2.2e-16 for the F-statistic indicates that the overall model is statistically significant
 
+Overall, the significance of the location variables appear questionable. Moreover, our $R^2$ is very low, indicating potential misspecification. Given the unclear relationship with location variables, we refit the model with only years of experience and education.
+
+```{r}
+ols <- lm(salary_max ~ highest_ed +  years_exp, data = job_listings)
+summary(ols)
+```
+
+Our fit appears much better. We can test out the model with a few predictions.
+
+```{r}
+test <- data.frame(highest_ed = c('bachelor','master','phd'),
+                   years_exp = c(5,10,15))
+
+scales::comma(predict(ols, test))
+```
+
+## Random Forest
+
+Dummy encoding
+
+```{r}
+jobs_skills_matrix <- jobs_long %>%
+  pivot_wider(names_from = highest_ed, values_from = highest_ed,
+              names_prefix = 'ed_', values_fill = 0, values_fn = length) %>%
+  pivot_wider(names_from = continent, values_from = continent,
+              names_prefix = 'loc_', values_fill = 0, values_fn = length) %>%
+  pivot_wider(names_from = skills, values_from = skills,
+              values_fill = 0, values_fn = length) %>%
+  select_if(is.numeric) %>%
+  select(salary_max,
+         years_exp,
+         starts_with('ed_'),
+         starts_with('loc_'),
+         which(colSums(., na.rm = TRUE) > 1000),
+         -ed_NA,
+         -loc_NA,
+         -salary_min,
+         -job_id)
+
+colnames(jobs_skills_matrix) <- str_replace_all(colnames(jobs_skills_matrix),
+                                                ' ', '_')
+
+head(jobs_skills_matrix)
+```
+
+Baseline Fit
+
+```{r}
+rf <- randomForest(salary_max ~ .,
+                   data = jobs_skills_matrix,
+                   ntree = 1000,
+                   na.action = na.omit,
+                   importance = TRUE)
+rf
+```
+
+Visualize (i) feature importance and (ii) squared error as trees increase.
+
+```{r}
+imp <- as.data.frame(importance(rf))
+imp$Var.Names <- row.names(imp)
+
+ggplot(imp, aes(Var.Names, `%IncMSE`)) +
+  geom_segment(aes(x = Var.Names, xend = Var.Names, y = 0, yend = `%IncMSE`)) +
+  geom_point(aes(size = IncNodePurity)) +
+  coord_flip() +
+  theme(legend.position = 'bottom',
+        panel.border = element_blank())
+
+data.frame(tree = 1:rf$ntree, rmse = sqrt(rf$mse)) %>%
+  ggplot(aes(tree, rmse)) +
+  geom_line()
+```
+
+Save matrix and model for use in Shiny app.
+
+```{r}
+saveRDS(rf, 'salary_prediction/salary_rf.rds')
+write_csv(jobs_skills_matrix, 'salary_prediction/jobs_skills_matrix.csv')
+```
