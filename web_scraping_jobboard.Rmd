@@ -46,7 +46,7 @@ div_texts <- html_text(div_elements)
 ```
 
 
-```{r }
+```{r eval=FALSE}
 # print the text
 head(div_texts)
 ```

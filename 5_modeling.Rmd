@@ -18,8 +18,53 @@ job_listings <- read_csv('output/job_listings_enhanced.csv') %>%
 ```
 
 
+
+### Modling 
+
+We need to use the is.na() function to check for missing or invalid values in each variable individually
+
+
 ```{r}
-ols <- lm(salary_max ~ highest_ed +  years_exp + continent, data = job_listings)
-summary(ols)
+sum(is.na(job_listings$salary_max))
+sum(is.na(job_listings$years_exp))
+
 ```
+
+
+Using mean imputation to replace the missing values with the mean value of the corresponding variable
+
+```{r}
+# Replace missing values in years_exp with the mean value
+job_listings$years_exp[is.na(job_listings$years_exp)] <- mean(job_listings$years_exp, na.rm = TRUE)
+
+# Replace missing values in salary_max with the mean value
+job_listings$salary_max[is.na(job_listings$salary_max)] <- mean(job_listings$salary_max, na.rm = TRUE)
+
+```
+
+
+A scatter plot and linear regression line
+
+```{r}
+library(ggplot2)
+
+ggplot(job_listings, aes(x = years_exp, y = salary_max)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = "Years of Experience", y = "Maximum Salary")
+
+```
+
+linear regression model 
+
+```{r}
+ols <- lm(salary_max ~ highest_ed + years_exp + continent, data = job_listings)
+summary(ols)
+
+```
+
+
+The model suggests that the predicted salary for an individual with 0 years of experience, no postgraduate education, and working in a remote location in this data set is $83,354.9. Having a master's degree or PhD is associated with higher salaries than having only a bachelor's degree, with master's degree adding $6,684.1 and PhD adding $26,731.7 to the predicted salary. Each additional year of experience is associated with an increase of $2,121.1 in predicted salary. Working in the Americas, Asia, or Oceania regions is associated with higher salaries than working in Europe or in a remote location, with the highest salary predicted for individuals working in the Americas. However, the coefficient for Europe is only marginally significant with a p-value of 0.00443, and the coefficient for working in a remote location is only marginally significant with a p-value of 0.04688.
+
+The adjusted R-squared value of 0.1097 indicates that the predictors explain only about 10.97% of the variation in salary_max, which is relatively low. The p-value of < 2.2e-16 for the F-statistic indicates that the overall model is statistically significant
 
