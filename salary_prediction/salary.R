@@ -2,23 +2,26 @@
 library(shiny)
 library(tidyverse)
 library(randomForest)
+
 # Read in model and ata
 rf_model <- readRDS('salary_rf.rds')
 jobs_skills_matrix <- read_csv('jobs_skills_matrix.csv')
+
 # Set up capture df and input lists
 df_cols <- colnames(jobs_skills_matrix)
-degrees <- jobs_skills_matrix %>%
-  select(starts_with('ed_')) %>% 
-  colnames()
-locations <- jobs_skills_matrix %>%
-  select(starts_with('loc_')) %>%
-  colnames()
-skills <- jobs_skills_matrix %>%
-  select(!starts_with('ed_') &
-         !starts_with('loc_') &
-         !contains('years') &
-         !contains('salary')) %>%
-  colnames()
+df_cols_display <- df_cols %>%
+  str_remove_all('ed_|loc_') %>%
+  str_replace_all('_', ' ') %>%
+  str_to_sentence()
+degrees <- df_cols[str_which(df_cols, 'ed_')] %>%
+  str_remove_all('ed_') %>% str_to_sentence()
+locations <- df_cols[str_which(df_cols, 'loc_')] %>%
+  str_remove_all('loc_') %>% str_to_sentence()
+skills <- df_cols[str_which(
+  df_cols,'^((?!ed_|loc_|years|salary|\\.).*)$')] %>%
+  str_replace_all('_', ' ') %>%
+  str_to_sentence()
+
 
 # Define UI
 ui <- fluidPage(
@@ -72,10 +75,10 @@ server <- function(input, output) {
         
         # Create dataframe
         df <- data.frame(matrix(nrow = 1, ncol = 23))
-        colnames(df) <- df_cols
+        colnames(df) <- df_cols_display
         
         # Capture years of experience
-        df['years_exp'] = input$experience
+        df['Years exp'] = input$experience
         
         # Capture education
         for (degree in degrees) {
@@ -99,8 +102,14 @@ server <- function(input, output) {
         }
         
         # Use df with inputs to predict salary and return
+        colnames(df) <- df_cols
         result <- paste('Predicted salary: $',
-                        predict(rf_model, df)[[1]] %>% scales::comma())
+                        (predict(rf_model, df)[[1]] - (sqrt(min(rf_model$mse)) / 2)) %>%
+                          scales::comma(),
+                        'to',
+                        (predict(rf_model, df)[[1]] + (sqrt(min(rf_model$mse)) / 2)) %>%
+                          scales::comma()
+        )
         return(result)
     
     })

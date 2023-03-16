@@ -148,6 +148,14 @@ data.frame(tree = 1:rf$ntree, rmse = sqrt(rf$mse)) %>%
   geom_line()
 ```
 
+Export to Salary Prediction App
+
+```{r}
+saveRDS(rf, 'salary_prediction/salary_rf.rds')
+write.csv(jobs_skills_matrix, 'salary_prediction/jobs_skills_matrix.csv', row.names = FALSE)
+```
+
+
 ## KNN Recommender
 
 TBD
@@ -157,7 +165,7 @@ jobs_distances <- as.matrix(dist(jobs_skills_matrix, method="euclidean"))
 dim(jobs_distances)
 jobs_distances[1:10,1:10]
 ```
-
+Source
 https://rpubs.com/ferranmt/80166
 
 ```{r}
@@ -170,31 +178,22 @@ knn <- function(i, distance_matrix, k = 5) {
 }
 ```
 
-
-```{r}
-knn('40867', jobs_distances)
-```
-
+Test
 
 ```{r}
 test <- jobs_skills_matrix[100,]
 new_matrix <- rbind(jobs_skills_matrix, test)
 new_distances <- as.matrix(dist(new_matrix, method="euclidean"))
 last_row_name <- rownames(tail(new_distances,1))
-match_ids <- knn(last_row, new_distances, 5)
-match_ids <- result[result != last_row_name]
+match_ids <- knn(last_row_name, new_distances, 5)
+match_ids <- match_ids[match_ids != last_row_name]
 match_ids
 
 job_listings[job_listings$job_id %in% match_ids,]
 ```
 
-
-## Export
-
-Save matrix and model for use in Shiny app.
+Save matrix for use in recommender Shiny app.
 
 ```{r}
-saveRDS(rf, 'salary_prediction/salary_rf.rds')
-write.csv(jobs_skills_matrix, 'salary_prediction/jobs_skills_matrix.csv', row.names = FALSE)
 write.csv(jobs_skills_matrix, 'job_recommendations/jobs_skills_matrix.csv', row.names = TRUE)
 ```

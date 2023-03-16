@@ -1,8 +1,9 @@
 # Setup
 library(shiny)
 library(tidyverse)
+
 # Read in data and define knn function
-jobs_skills_matrix <- read.csv('jobs_skills_matrix.csv',row.names = 1)
+jobs_skills_matrix <- read.csv('jobs_skills_matrix.csv', row.names = 1)
 job_listings <- read.csv('job_listings.csv')
 knn <- function(i, distance_matrix, k = 5) {
   neighbors <- data.frame(dist = distance_matrix[i,])
@@ -11,20 +12,22 @@ knn <- function(i, distance_matrix, k = 5) {
     rownames()
   return(k_nearest_ids)
 }
+
 # Set up capture df and input lists
 df_cols <- colnames(jobs_skills_matrix)
-degrees <- jobs_skills_matrix %>%
-  select(starts_with('ed_')) %>% 
-  colnames()
-locations <- jobs_skills_matrix %>%
-  select(starts_with('loc_')) %>%
-  colnames()
-skills <- jobs_skills_matrix %>%
-  select(!starts_with('ed_') &
-           !starts_with('loc_') &
-           !contains('years') &
-           !contains('salary')) %>%
-  colnames()
+df_cols_display <- df_cols %>%
+  str_remove_all('ed_|loc_') %>%
+  str_replace_all('_', ' ') %>%
+  str_to_sentence()
+degrees <- df_cols[str_which(df_cols, 'ed_')] %>%
+  str_remove_all('ed_') %>% str_to_sentence()
+locations <- df_cols[str_which(df_cols, 'loc_')] %>%
+  str_remove_all('loc_') %>% str_to_sentence()
+skills <- df_cols[str_which(
+  df_cols,'^((?!ed_|loc_|years|salary|\\.).*)$')] %>%
+  str_replace_all('_', ' ') %>%
+  str_to_sentence()
+
 
 # Define UI
 ui <- fluidPage(
@@ -78,10 +81,10 @@ server <- function(input, output) {
     
     # Create dataframe
     df <- data.frame(matrix(nrow = 1, ncol = 23))
-    colnames(df) <- df_cols
+    colnames(df) <- df_cols_display
     
     # Capture years of experience
-    df['years_exp'] = input$experience
+    df['Years exp'] = input$experience
     
     # Capture education
     for (degree in degrees) {
@@ -105,6 +108,7 @@ server <- function(input, output) {
     }
     
     # Use df with inputs to generate distances and identify k nearest neighbors
+    colnames(df) <- df_cols
     new_matrix <- rbind(jobs_skills_matrix, df)
     new_distances <- as.matrix(dist(new_matrix, method="euclidean"))
     last_row_name <- rownames(tail(new_distances,1))
@@ -113,7 +117,6 @@ server <- function(input, output) {
     
     output_df <- job_listings[job_listings$job_id %in% match_ids,]
     output_df <- output_df %>% select(-job_description)
-    # return(output_df)
     
     DT::datatable(output_df,
                   options = list(dom = 't'),
