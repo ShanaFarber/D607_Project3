@@ -2,14 +2,16 @@
 title: "Web scraping on job board for data analysts"
 author: "Rstudio"
 date: "2023-03-16"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Web scraping  on the website which Kayleah provided. 
+##### Web scraping  on the website which Kayleah provided. 
 
 (website)[https://www.dataanalyst.com/]
 
@@ -17,23 +19,56 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(rvest)
-
-url <- 'https://www.dataanalyst.com'
-
-html <- read_html(url)
-
-divs <- html %>%
-  html_nodes("div.job-board-wrapper")
-
-divs_text <- divs %>%
-  html_text()
-
-divs_text
+library(RCurl)
+library(XML)
+library(xml2)
+library(jsonlite)
+library(DT)
+library(tidyverse)
 ```
 
 
 ```{r}
-# Create empty data frame with column names
+
+# library
+library(rvest)
+
+# read the website
+url <- "https://www.dataanalyst.com"
+webpage <- read_html(url)
+
+# locate the element
+datacontent <- html_nodes(webpage, "div.section.home.wf-section")
+
+# scrape all the "div" elements inside
+div_elements <- html_nodes(datacontent, "div")
+```
+
+
+```{r}
+# get the text attribute
+div_texts <- html_text(div_elements)
+
+```
+
+
+```{r}
+# print the text
+head(div_texts)
+```
+
+
+
+```{r}
+
+# save it to data frame
+div_texts_df <- data.frame(text = div_texts, stringsAsFactors = FALSE)
+
+div_texts_df
+```
+
+```{r}
+# create an empty data frame to store the results
 job_data <- data.frame(job_title = character(),
                        company_name = character(),
                        country = character(),
@@ -44,6 +79,33 @@ job_data <- data.frame(job_title = character(),
                        industry = character(),
                        published_date = character(),
                        stringsAsFactors = FALSE)
+```
+
+
+
+```{r eval=FALSE}
+
+# loop through the job elements and extract the information
+for (i in 1:nrow(div_texts_df)) {
+  job_title <- html_text(html_nodes(read_html(div_texts_df[i, "text"]), "h3"))
+  company_name <- html_text(html_nodes(read_html(div_texts_df[i, "text"]), "p.company-name"))
+  country <- html_text(html_nodes(read_html(div_texts_df[i, "text"]), "p.job-location span:nth-child(1)"))
+  location <- html_text(html_nodes(read_html(div_texts_df[i, "text"]), "p.job-location span:nth-child(2)"))
+  workplace <- html_text(html_nodes(read_html(div_texts_df[i, "text"]), "p.job-location span:nth-child(3)"))
+  experience <- html_text(html_nodes(read_html(div_texts_df[i, "text"]), "p.job-exp"))
+  salary <- html_text(html_nodes(read_html(div_texts_df[i, "text"]), "p.job-salary"))
+  industry <- html_text(html_nodes(read_html(div_texts_df[i, "text"]), "p.job-industry"))
+  published_date <- html_text(html_nodes(read_html(div_texts_df[i, "text"]), "p.job-date"))
+
+  # add the information to the data frame
+  job_data <- rbind(job_data, data.frame(job_title, company_name, country, location, workplace, experience, salary, industry, published_date))
+}
+
 
 ```
+
+
+
+
+
 
