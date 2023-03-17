@@ -10,11 +10,11 @@ The work completed to explore today's most valued data science skills can be sum
 
 The data used to conduct this analysis was collected from four jobs boards. Further description of why these jobs boards were chosen (based on respecting robots.txt files and legality) can be found in “./reports/spring23_data607_proj3A.pdf”. After the jobs boards were selected three of them required web-scraping and one could be downloaded directly. The web-scraping was completed in python using jupyter notebooks, these files are titled “1_[data source].ipynb. After the web-scraping and downloading was completed, the output csv files were saved in the “data” folder of our github. 
 
-2) Clean the data and extract skills
+2) Clean the data and create a skills dictionary
 
 The next step in the process was to clean the data and create a skills dictionary, this was done in “2_create_clean_data_frames.Rmd”. In this step the data from each job board was loaded from the github data folder and synthesized into two dataframes, “job_listings” for all of the job postings and “skills” for the skills dictionary. The output of this step is the two dataframes saved in csv files in a local output directory.
 
-3) Perform additional cleaning of the data
+3) Extract the skills from the job postings
 
 At this stage, “3_match_jobs_skills.Rmd” was created to load the output files from step 2 and then create a years of experience column, adjust salary into the same currency, and extract the skills. Our database design is further described in “./reports/spring23_data607_proj3A.pdf”. The dataframes from this step were written to a csv file in a local output directory.
 
