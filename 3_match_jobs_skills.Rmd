@@ -8,20 +8,25 @@ output: html_document
 ```{r setup, message=FALSE}
 library(tidyverse)
 library(countrycode)
+library(kableExtra)
 ```
 
-## Read in data
+## Introduction.
 
-```{r}
+This work is the third of five stages of an analysis where the main objective was to identify the most valued data science skills. Our approach to this was to collect job postings from various job boards and extract the skills from the postings. The purpose of this specific file's work is to provide additional cleaning and synthesis of the data as well as to extract the skills from the job postings data.
+
+## Additional cleaning and Mutating
+
+First the files created from 2_create_clean_data_frames.Rmd were read in.  
+
+```{r, warning=FALSE, message=FALSE}
 job_listings <- read_csv('output/job_listings.csv')
 skills <- read_csv('output/skills.csv')
 ```
 
-## Additional cleaning
+Mutate was used to clean up and extract some additional variables. First, key columns (title, description, qualifications) were converted to lowercase and special characters were removed. The goal was to facilitate matches. Then, the highest education level requested in each listing was extracted, along with the max requested years of experience. A temporary "combo" field was created so that both job descriptions and qualifications fields could be easily reanalyzed. Also, the salary data was standardized into a common currency, USD.
 
-We use mutate to clean up and extract some additional variables. First, we convert key columns (title, description, qualifications) to lowercase and remove special characters. The goal is to facilitate matches. Then, we attempt to extract the highest education level requested in each listing, along with the max requested years of experience. We create a temporary "combo" field so we can look across both job descriptions and qualifications fields.
-
-```{r}
+```{r, warning=FALSE}
 job_listings <- job_listings %>%
   mutate(job_title = tolower(job_title) %>%
            str_replace_all('[â¢\u0080-\uFFFF]', ''),
@@ -76,7 +81,9 @@ job_listings <- job_listings %>%
   select(-combo_details)
 ```
 
-Next, we aim to extract all relevant skills from the qualifications and descriptions fields. These skills are first extracted into a list-column, with each row containing a list of unique skills mentioned in the job details. We then unnest those lists to create another long-form dataframe to facilitate further analysis.
+## Skills Extraction
+
+Next, all relevant skills from the qualifications and descriptions fields were extracted. These skills are first extracted into a list-column, with each row containing a list of unique skills mentioned in the job details. Then they are unnested to create another long-form dataframe to facilitate further analysis.
 
 ```{r}
 skills_unique <- unique(tolower(skills$skill))
@@ -102,7 +109,86 @@ job_listings_skills_string <- job_listings_skills %>%
   ungroup()
 ```
 
-We now can write the two dataframes to csv.
+
+### Function for Extracting Skills
+
+Another method we tried for extracting skills is shown in the function below. `extractSkills` was created to cross check the skills dictionary against the job descriptions from the job listings. Within the function,  `job_quals` and `job_description` were checked to account for all places where there might be any skills listed. Ultimately, this function was not used but it is included to show an alternative way for skills extraction to occur. 
+
+```{r skills-extract-func}
+extractSkills <- function(job_df, dict) {
+  job_id_and_skill <- c()
+  
+  # checking for R (programming language) or broader language use
+  vis_and_r_check <- c("R"="(\\s|\\\\)R(\\s|,|\\\\)", 
+                       "Data visualization"="visual", 
+                       "Data collection" = "(Data collection|collect data)", 
+                       "Data analysis" = "(Data analysis|analyze data)", 
+                       "Communication" = "(Communication|communicate)", 
+                       "Collaboration" = "(Collaboration|collaborate|collaborative)", 
+                       "C" = "(\\s|\\\\)C(\\s|,|\\\\)", "C\\+\\+" = "C\\+\\+")
+
+  for(i in 1:length(job_df$job_id)) {
+    job_id <- job_df$job_id[i]
+    search <- paste(job_df$job_quals[i], job_df$job_desciption[i])
+  
+    for (j in 1:length(dict)) {
+      pat <- dict[j]
+      
+      if (!pat %in% names(vis_and_r_check)) {
+        if (str_detect(tolower(search), tolower(pat))) {
+        job_id_and_skill <- append(job_id_and_skill, paste(job_id, pat, sep = ","))
+        }
+      } else {
+        new_pat <- vis_and_r_check[pat]
+      
+        if (str_detect(tolower(search), tolower(new_pat))) {
+        job_id_and_skill <- append(job_id_and_skill, paste(job_id, pat, sep = ","))
+        }
+      }
+    }
+  }
+
+  skills_df <- data.frame("job_id_and_skill" = job_id_and_skill) %>%
+    separate(col = job_id_and_skill, into = c("job_id", "skill"), sep = ",")
+  
+  return(skills_df)
+}
+```
+
+
+To take a quick look at the cleaned data from each source the below code could be uncommented. 
+
+```{r}
+# for (source in unique(job_listings_skills_string$website)) {
+#   tbl <- job_listings_skills_string %>%
+#     filter(website == source,
+#            !is.na(highest_ed),
+#            !is.na(years_exp)) %>%
+#     head(5) %>%
+#     print()
+# }
+# 
+# for (source in unique(job_listings_skills_long$website)) {
+#   tbl <- job_listings_skills_long %>%
+#     filter(website == source,
+#            !is.na(highest_ed),
+#            !is.na(years_exp)) %>%
+#     head(15) %>%
+#     print()
+# }
+```
+
+A look at the dataframe created is below.
+
+```{r}
+kable(head(job_listings_skills_long,5))  |>
+  kable_styling("striped")
+```
+
+
+## Save the dataframes as csv
+
+The two dataframes were written to csv files.
 
 ```{r}
 write.csv(job_listings, "output/job_listings_enhanced.csv", row.names = FALSE)
@@ -111,27 +197,6 @@ write.csv(job_listings_skills_string, "output/job_listings_skills_string.csv", r
 write.csv(job_listings_skills_string, "job_recommendations/job_listings_skills_string.csv", row.names = FALSE)
 ```
 
+## Conclusion
 
-Finally, we take a quick look at the cleaned data from each source.
-
-```{r}
-for (source in unique(job_listings_skills_string$website)) {
-  tbl <- job_listings_skills_string %>%
-    filter(website == source,
-           !is.na(highest_ed),
-           !is.na(years_exp)) %>%
-    head(5) %>%
-    print()
-}
-
-for (source in unique(job_listings_skills_long$website)) {
-  tbl <- job_listings_skills_long %>%
-    filter(website == source,
-           !is.na(highest_ed),
-           !is.na(years_exp)) %>%
-    head(15) %>%
-    print()
-}
-```
-
-
+The objective of this stage of the analysis was met, the skills were successfully extracted from the job qualifications and descriptions. One limitation of this work is the length of time that it takes for the skills extraction to be done. For a future extension of this work, if more job postings are aggregated and more skills added - the processing time could become unreasonably long - a process to speed up skills extraction would need to be explored. 
