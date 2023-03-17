@@ -365,9 +365,9 @@ objective was to identify the most valued data science skills. Our
 approach to this was to collect job postings from various job boards and
 extract the skills from the postings. The purpose of this specific
 file’s work is to process the data from each of our data sources, stored
-in our github repository, and bring them all into two clean dataframes.
-One dataframe is to store the job listing information and another
-dataframe is to store all of the skills information.</p>
+in our github repository, and bring them all into one clean dataframes.
+In addition, this file also aggregates skills information into a
+dataframe to save a dictionary of skills for later use.</p>
 </div>
 <div id="loading-the-data" class="section level2">
 <h2>Loading the Data</h2>
@@ -394,18 +394,19 @@ nyc_jobs &lt;- read.csv(url(&quot;https://github.com/kac624/D607_Project3/blob/m
 # data analyst web scrape
 data_analyst_jobs &lt;- read.csv(url(&quot;https://github.com/kac624/D607_Project3/blob/main/data/data_analyst_dot_com.csv?raw=true&quot;))</code></pre>
 </div>
-<div id="data-cleaning-and-skills-extraction" class="section level2">
-<h2>Data Cleaning and Skills Extraction</h2>
-<p>The next step in the process was to create a skills dictionary to use
-for extracting the skills from the job postings. Then, to simplify
-downstream processing, one common dataframe for all of the jobs posting
-data, <code>job_listings</code> and another dataframe for all of the
-skills from those job postings, <code>skills</code> was created. The
-formats of the dataframes created are:</p>
+<div id="data-cleaning-and-skills-dictionary" class="section level2">
+<h2>Data Cleaning and Skills Dictionary</h2>
+<p>The next step in the process was to synthesize all of the data from
+each of the job postings and additionally create a skills dictionary to
+use later for extracting the skills from the job postings. Then, to
+simplify downstream processing, one common dataframe for all of the jobs
+posting data, <code>job_listings</code> and another dataframe for all of
+the skills, <code>skills</code> was created. The formats of the
+dataframes created are:</p>
 <p><code>job_listings</code> - job_id - job_title - location -
 salary_currency - salary_min - salary_max - job_quals - job_description
 - website</p>
-<p><code>skills</code> - job_id - skill</p>
+<p><code>skills</code> - skill</p>
 <div id="ai-jobs" class="section level3">
 <h3>AI Jobs</h3>
 <p>This data was web scraped by Keith Collela from <a href="https://ai-jobs.net/">ai-jobs.net</a> and combined into a csv
@@ -447,11 +448,8 @@ ai_jobs_cleaned &lt;- ai_jobs_cleaned %&gt;%
 </div>
 <div id="create-a-skills-dictionary" class="section level3">
 <h3>Create a Skills Dictionary</h3>
-<p>Using the <code>job_id</code> a separate data frame was created with
-the skills from each job listing. This data frame has
-<code>job_id</code> as a foreign key for the main <code>ai_jobs</code>
-table. The skills here were extracted from what was originally the
-<code>tags</code> column and what has been renamed as
+<p>The skills here were extracted from what was originally the
+<code>tags</code> column from AI jobs and that has been renamed as
 <code>job_quals</code>.</p>
 <pre class="r"><code>########## extract skills from tags ##############
 
@@ -510,65 +508,6 @@ skills_dictionary &lt;- skills_dictionary[!skills_dictionary == &quot;Matlab&quo
 length(unique(tolower(skills_dictionary))) == length(skills_dictionary)</code></pre>
 <pre><code>## [1] TRUE</code></pre>
 </div>
-<div id="function-for-extracting-skills" class="section level3">
-<h3>Function for Extracting Skills</h3>
-<p>The next step was to create a function, <code>extractSkills</code> to
-cross check the skills dictionary against the job descriptions from the
-job listings. Within the function, <code>job_quals</code> and
-<code>job_description</code> were checked to account for all places
-where there might be any skills listed.</p>
-<pre class="r"><code>extractSkills &lt;- function(job_df, dict) {
-  job_id_and_skill &lt;- c()
-  
-  # checking for R (programming language) or broader language use
-  vis_and_r_check &lt;- c(&quot;R&quot;=&quot;(\\s|\\\\)R(\\s|,|\\\\)&quot;, 
-                       &quot;Data visualization&quot;=&quot;visual&quot;, 
-                       &quot;Data collection&quot; = &quot;(Data collection|collect data)&quot;, 
-                       &quot;Data analysis&quot; = &quot;(Data analysis|analyze data)&quot;, 
-                       &quot;Communication&quot; = &quot;(Communication|communicate)&quot;, 
-                       &quot;Collaboration&quot; = &quot;(Collaboration|collaborate|collaborative)&quot;, 
-                       &quot;C&quot; = &quot;(\\s|\\\\)C(\\s|,|\\\\)&quot;, &quot;C\\+\\+&quot; = &quot;C\\+\\+&quot;)
-
-  for(i in 1:length(job_df$job_id)) {
-    job_id &lt;- job_df$job_id[i]
-    search &lt;- paste(job_df$job_quals[i], job_df$job_desciption[i])
-  
-    for (j in 1:length(dict)) {
-      pat &lt;- dict[j]
-      
-      if (!pat %in% names(vis_and_r_check)) {
-        if (str_detect(tolower(search), tolower(pat))) {
-        job_id_and_skill &lt;- append(job_id_and_skill, paste(job_id, pat, sep = &quot;,&quot;))
-        }
-      } else {
-        new_pat &lt;- vis_and_r_check[pat]
-      
-        if (str_detect(tolower(search), tolower(new_pat))) {
-        job_id_and_skill &lt;- append(job_id_and_skill, paste(job_id, pat, sep = &quot;,&quot;))
-        }
-      }
-    
-    
-    }
-  }
-
-  skills_df &lt;- data.frame(&quot;job_id_and_skill&quot; = job_id_and_skill) %&gt;%
-    separate(col = job_id_and_skill, into = c(&quot;job_id&quot;, &quot;skill&quot;), sep = &quot;,&quot;)
-  
-  return(skills_df)
-}</code></pre>
-<p>Then <code>skills_dictionary</code> was cross-checked against
-<code>job_description</code> for AI Jobs to see if there were any more
-skills within the descriptions for listings that were not included in
-the tags.</p>
-<pre class="r"><code>ai_jobs_skills2 &lt;- extractSkills(ai_jobs_cleaned, skills_dictionary)
-
-# full join to original skills df to add additional skills without repeating
-ai_jobs_skills &lt;- full_join(ai_jobs_skills, ai_jobs_skills2, by = c(&quot;job_id&quot;, &quot;skill&quot;))
-
-length(unique(ai_jobs_skills)$job_id) == length(ai_jobs_skills$job_id)</code></pre>
-<pre><code>## [1] TRUE</code></pre>
-</div>
 <div id="usa-jobs" class="section level3">
 <h3>USA Jobs</h3>
 <p>This csv file was generated by Kayleah Griffen by web scraping <a href="https://www.usajobs.gov/">usajobs.gov</a>.</p>
@@ -608,13 +547,6 @@ usa_jobs_cleaned &lt;- usa_jobs_cleaned %&gt;%
 usa_jobs_cleaned &lt;- usa_jobs_cleaned %&gt;% 
   filter(str_detect(tolower(job_title), &quot;data&quot;)) %&gt;%
   filter(str_detect(tolower(job_title), &quot;(analyst|engineer|developer|scientist)&quot;))</code></pre>
-<p>The <code>extractSkills</code> function was used to extract the
-skills.</p>
-<pre class="r"><code>usa_jobs_skills &lt;- extractSkills(usa_jobs_cleaned, skills_dictionary)
-
-# check for possible redundancy
-length(unique(usa_jobs_skills)$job_id) == length(usa_jobs_skills$job_id)</code></pre>
-<pre><code>## [1] TRUE</code></pre>
 </div>
 <div id="nyc-jobs" class="section level3">
 <h3>NYC Jobs</h3>
@@ -639,20 +571,6 @@ nyc_jobs_cleaned &lt;- nyc_jobs_filtered %&gt;%
             job_description,
             &quot;website&quot; = &quot;data.cityofnewyork.us&quot;) %&gt;%
   filter(!is.na(job_quals))</code></pre>
-<p>Next, using the same iteration as above to the skills from
-<code>job_quals</code> and <code>job_qualifications</code> was
-extracted.</p>
-<pre class="r"><code>nyc_jobs_skills &lt;- extractSkills(nyc_jobs_cleaned, skills_dictionary)
-
-# check for redundancy
-length(unique(nyc_jobs_skills)$job_id) == length(nyc_jobs_skills$job_id)</code></pre>
-<pre><code>## [1] FALSE</code></pre>
-<pre class="r"><code># eliminate redundancy
-nyc_jobs_skills &lt;- unique(nyc_jobs_skills)
-
-# check again
-length(unique(nyc_jobs_skills)$job_id) == length(nyc_jobs_skills$job_id)</code></pre>
-<pre><code>## [1] TRUE</code></pre>
 </div>
 <div id="data-analyst-jobs" class="section level3">
 <h3>Data Analyst Jobs</h3>
@@ -695,30 +613,21 @@ data_analyst_jobs_cleaned &lt;- data_analyst_jobs_cleaned %&gt;%
 # making sure each job_id is unique
 length(unique(data_analyst_jobs_cleaned$job_id)) == length(data_analyst_jobs_cleaned$job_id)</code></pre>
 <pre><code>## [1] TRUE</code></pre>
-<p>Next the skills were extracted from the data analyst job listing:</p>
-<pre class="r"><code>data_analyst_jobs_skills &lt;- extractSkills(data_analyst_jobs_cleaned, skills_dictionary)
-
-# checking for possible redundancy
-length(unique(data_analyst_jobs_skills)$job_id) == length(data_analyst_jobs_skills$job_id)</code></pre>
-<pre><code>## [1] TRUE</code></pre>
 </div>
 </div>
 <div id="combining-data-frames" class="section level2">
 <h2>Combining Data Frames</h2>
-<p>To create a full data frame of all the job listing and all the
-skills, the jobs data sets were merged into <code>job_listings</code>
-and the skills data sets were merged into <code>skills</code>.</p>
+<p>To create a full data frame of all the job listing the jobs data sets
+were merged into <code>job_listings</code> and a dataframe with the
+skills was also created, <code>skills</code>.</p>
 <pre class="r"><code>job_listings &lt;- ai_jobs_cleaned %&gt;%
   rbind(usa_jobs_cleaned) %&gt;%
   rbind(nyc_jobs_cleaned) %&gt;%
   rbind(data_analyst_jobs_cleaned)
 
-skills &lt;- ai_jobs_skills %&gt;%
-  rbind(usa_jobs_skills) %&gt;%
-  rbind(nyc_jobs_skills) %&gt;%
-  rbind(data_analyst_jobs_skills)</code></pre>
-<p>Separate CSV files for each required data frame were created to be
-analyzed.</p>
+skills &lt;- data.frame(skill = skills_dictionary)</code></pre>
+<p>Separate CSV files for each data frame were created to be analyzed
+later.</p>
 <pre class="r"><code>write.csv(job_listings, &quot;output/job_listings.csv&quot;, row.names=F)
 
 write.csv(skills, &quot;output/skills.csv&quot;, row.names=F)</code></pre>
@@ -734,25 +643,22 @@ are:</p>
 If someone was interested in updating the data they would need to run
 the python files for scraping again and re-upload the files to the
 github repository.</p></li>
-<li><p>Our skills dictionary will become dated if new data science
-skills emerge. Potentially an unstructured learning approach - where
-skills are detected from all jobs postings - could be implemented to
-combat this.</p></li>
+<li><p>Our skills dictionary relies on a static list of skill and the AI
+jobs skills tags. The list could become dated if new data science skills
+emerge that are not represented in AI jobs or the static skills list.
+Potentially an unstructured learning approach - where skills are
+detected from all jobs postings - could be implemented to combat
+this.</p></li>
 <li><p>Duplicated job listing across job boards was not checked for. To
 extend this work we would find a robust method for checking for
 duplication such as including the company in the
 <code>job_listings</code> dataframe and checking for exact matches of
 the rest of the columns of the dataframe aside from <code>job_id</code>
 and <code>website</code>.</p></li>
-<li><p>The processing time for the code will get longer as more skills
-and more job listings are added. To speed up the process we would need
-to research ways to adapt the <code>extractSkills</code> function to
-make it faster.</p></li>
 </ol>
-<p>Overall, our processing of the job listings into the skills was
-successful and provides a foundation for the next stage of the project
-which is to analyze the data to determine the most valued data science
-skills.</p>
+<p>Overall, our processing of the job listings and creating a skills
+dictionary was successful and provides a foundation for the next stage
+of the project which is to extract the skills from the job postings.</p>
 </div>
 
 
