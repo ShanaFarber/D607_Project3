@@ -13,11 +13,17 @@ library(snakecase)
 library(DT)
 ```
 
+## Introduction 
+
+This work is the second of five stages of an analysis where the main objective was to identify the most valued data science skills. Our approach to this was to collect job postings from various job boards and extract the skills from the postings. The purpose of this specific file's work is to process the data from each of our data sources, stored in our github repository, and bring them all into two clean dataframes. One dataframe is to store the job listing information and another dataframe is to store all of the skills information.
+
 ## Loading the Data
+
+The first step was to load the data. Each of the data sources was obtained by web scraping from job boards which allow wweb scraping (USA jobs, AI jobs, dataanalyst.com) or downloading the job listings directly (NYC jobs). The scraping of each job board was done using python and a csv file was created for each and uploaded to our github repository so that it could be easily available in R for data analysis. 
 
 ```{r load-data}
 # ai jobs web scrape csv
-ai_jobs <- read.csv(url("https://raw.githubusercontent.com/ShanaFarber/D607_Project3/main/data/aiJobsDf.csv"), na.strings = c(""))
+ai_jobs <- read.csv(url("https://github.com/kac624/D607_Project3/blob/main/data/aiJobsDf.csv?raw=true"), na.strings = c(""))
 
 # usa jobs web scrape csvs
 usa_jobs_data_analyst <- read.csv(url("https://raw.githubusercontent.com/kac624/D607_Project3/main/data/data_analyst_usa_jobs.csv"), na.strings = c(""))
@@ -28,21 +34,38 @@ usa_jobs_data_scientist <- read.csv(url("https://raw.githubusercontent.com/kac62
 usa_jobs <- rbind(usa_jobs_data_analyst, usa_jobs_data_scientist)
 
 # nyc jobs csv download
-nyc_jobs <- read.csv(url("https://raw.githubusercontent.com/ShanaFarber/D607_Project3/main/data/NYC_Jobs-2.csv"), na.strings = c(""))
+nyc_jobs <- read.csv(url("https://github.com/kac624/D607_Project3/blob/main/data/NYC_Jobs-2.csv?raw=true"), na.strings = c(""))
 
 # data analyst web scrape
-data_analyst_jobs <- read.csv(url("https://raw.githubusercontent.com/ShanaFarber/D607_Project3/main/data/data_analyst_dot_com.csv"))
+data_analyst_jobs <- read.csv(url("https://github.com/kac624/D607_Project3/blob/main/data/data_analyst_dot_com.csv?raw=true"))
 ```
 
-## Cleaning Up
+## Data Cleaning and Skills Extraction
+
+The next step in the process was to create a skills dictionary to use for extracting the skills from the job postings. Then, to simplify downstream processing, one common dataframe for all of the jobs posting data, `job_listings` and another dataframe for all of the skills from those job postings, `skills` was created. The formats of the dataframes created are:
+
+`job_listings`
+- job_id
+- job_title
+- location
+- salary_currency
+- salary_min
+- salary_max
+- job_quals
+- job_description
+- website
+
+`skills`
+- job_id
+- skill
 
 ### AI Jobs
 
 This data was web scraped by Keith Collela from [ai-jobs.net](https://ai-jobs.net/) and combined into a csv file. 
 
-Looking at the data frame for the AI Jobs listings, the `tags` column seems to be the data science skills that are required. There are also some skills that may be listed within the `description` of the job listing. 
+A look at the data frame for the AI Jobs listings showed that the `tags` column contains the data science skills that are required for the job. There are also some skills that may be listed within the `description` of the job listing. 
 
-The job titles can be found in the `url` column within the url for the job listing. The format for each url is "https://ai-jobs.net//job/#####-job-title/". We used the number portion of the url as an ID for the jobs in this data frame. 
+The job titles can be found in the `url` column within the url for the job listing. The format for each url is "https://ai-jobs.net//job/#####-job-title/". The number portion of the url was used as an ID for the jobs in this data frame. 
 
 ```{r}
 # extracting job id and job titles
@@ -53,13 +76,7 @@ ai_jobs_cleaned <- ai_jobs %>%
          job_title = str_replace_all(job_title, "-", " "))
 ```
 
-Now let's extract the job type, level, and salary ranges from the `ai_jobs` data frame:
-
-```{r include=FALSE}
-# str_view(ai_jobs_cleaned$pay_level, "[A-Za-z]+(\\s[A-Za-z]+)?")
-# str_view(ai_jobs_cleaned$pay_level, "[A-Za-z]+-level")
-# str_view(ai_jobs_cleaned$pay_level, "[A-Z]+\\s\\w+(\\+)?(\\s-\\s\\w+)?")
-```
+Next the job type, level, and salary ranges from the `ai_jobs` were extracted into a data frame:
 
 ```{r clean-ai-jobs}
 ai_jobs_cleaned <- ai_jobs_cleaned %>%
@@ -82,9 +99,9 @@ ai_jobs_cleaned <- ai_jobs_cleaned %>%
             "website" = "ai-jobs.net")
 ```
 
-**Attempting to Create a Skills Dictionary**
+### Create a Skills Dictionary
 
-Using the `job_id` I created a separate data frame with the skills from each job listing. This data frame has `job_id` as a foreign key for the main `ai_jobs` table. The skills here were extracted from what was originally the `tags` column and what has been renamed as `job_quals`.
+Using the `job_id` a separate data frame was created with the skills from each job listing. This data frame has `job_id` as a foreign key for the main `ai_jobs` table. The skills here were extracted from what was originally the `tags` column and what has been renamed as `job_quals`.
 
 ```{r get-ai-skills}
 ########## extract skills from tags ##############
@@ -107,16 +124,14 @@ for (job in 1:length(ai_jobs_cleaned$job_id)) {
 }
 ```
 
-I tried to create a dictionary of skills from different sources to match up skills in the job descriptions for the other websites.
-
-I first initialized a dictionary with the skills extracted from the AI Jobs listings. I then combined this with a data set of skills that I compiled based on my own knowledge and Google searches for useful data science skills.
+The first step was to initialize a dictionary with the skills extracted from the AI Jobs listings. Then this was combined with a data set of skills that was compiled based on research for useful data science skills - stored in our github repository.
 
 ```{r skills-dictionary}
 # initialize dictionary
 skills_dictionary <- unique(ai_jobs_skills$skill)
 
 # additional skills 
-additional_skills <- read.csv(url("https://raw.githubusercontent.com/ShanaFarber/D607_Project3/main/data/ds_skills.csv"))
+additional_skills <- read.csv(url("https://raw.githubusercontent.com/kac624/D607_Project3/main/data/ds_skills.csv"))
 additional_skills <- additional_skills$skill
 
 # add to skills_dictionary and remove redundancy
@@ -144,18 +159,23 @@ skills_dictionary <- skills_dictionary[!skills_dictionary == "Matlab"]
 length(unique(tolower(skills_dictionary))) == length(skills_dictionary)
 ```
 
-I then created a function to cross check the skills in the dictionary against the job descriptions from the job listings. 
 
-#### Function for Extracting Skills
+### Function for Extracting Skills
 
-Within the function, I combined `job_quals` and `job_description` to account for all places where there might be any skills listed. 
+The next step was to create a function, `extractSkills` to cross check the skills dictionary against the job descriptions from the job listings. Within the function,  `job_quals` and `job_description` were checked to account for all places where there might be any skills listed. 
 
 ```{r skills-extract-func}
 extractSkills <- function(job_df, dict) {
   job_id_and_skill <- c()
   
   # checking for R (programming language) or broader language use
-  vis_and_r_check <- c("R"="(\\s|\\\\)R(\\s|,|\\\\)", "Data visualization"="visual", "Data collection" = "(Data collection|collect data)", "Data analysis" = "(Data analysis|analyze data)", "Communication" = "(Communication|communicate)", "Collaboration" = "(Collaboration|collaborate|collaborative)", "C" = "(\\s|\\\\)C(\\s|,|\\\\)", "C\\+\\+" = "C\\+\\+")
+  vis_and_r_check <- c("R"="(\\s|\\\\)R(\\s|,|\\\\)", 
+                       "Data visualization"="visual", 
+                       "Data collection" = "(Data collection|collect data)", 
+                       "Data analysis" = "(Data analysis|analyze data)", 
+                       "Communication" = "(Communication|communicate)", 
+                       "Collaboration" = "(Collaboration|collaborate|collaborative)", 
+                       "C" = "(\\s|\\\\)C(\\s|,|\\\\)", "C\\+\\+" = "C\\+\\+")
 
   for(i in 1:length(job_df$job_id)) {
     job_id <- job_df$job_id[i]
@@ -187,7 +207,7 @@ extractSkills <- function(job_df, dict) {
 }
 ```
 
-I then cross-checked `skills_dictionary` against `job_description` for AI Jobs to see if there were any more skills within the descriptions for listings that were not included in the tags.
+Then `skills_dictionary` was cross-checked against `job_description` for AI Jobs to see if there were any more skills within the descriptions for listings that were not included in the tags.
 
 ```{r ai-jobs-skills}
 ai_jobs_skills2 <- extractSkills(ai_jobs_cleaned, skills_dictionary)
@@ -202,7 +222,7 @@ length(unique(ai_jobs_skills)$job_id) == length(ai_jobs_skills$job_id)
 
 This csv file was generated by Kayleah Griffen by web scraping [usajobs.gov](https://www.usajobs.gov/). 
 
-The data frame already includes a column for job title. The number from the url posting will become the `job_id`. We also need to extract the salary and skills. 
+The data frame already includes a column for job title. The number from the url posting will become the `job_id`. The salary and skills needs to be extracted. Also - in USA jobs, although Data Scientist and Data Analyst were explicity searched - some results irrelevant to Data Science/ Analysis came up - these were filtered out - only titles with data in the name as well as scientist, or engineer, or analyst, or developer were included. 
 
 ```{r clean-usa-jobs}
 usa_jobs_cleaned <- usa_jobs %>%
@@ -230,9 +250,13 @@ usa_jobs_cleaned <- usa_jobs_cleaned %>%
             "job_description" = paste(job_summary,job_duties),
             "website" = "usajobs.gov") %>%
   filter(!duplicated(job_id))
+
+usa_jobs_cleaned <- usa_jobs_cleaned %>% 
+  filter(str_detect(tolower(job_title), "data")) %>%
+  filter(str_detect(tolower(job_title), "(analyst|engineer|developer|scientist)"))
 ```
 
-I used the function created above to extract the skills. 
+The `extractSkills` function was used to extract the skills. 
 
 ```{r usa-jobs-skills}
 usa_jobs_skills <- extractSkills(usa_jobs_cleaned, skills_dictionary)
@@ -242,6 +266,8 @@ length(unique(usa_jobs_skills)$job_id) == length(usa_jobs_skills$job_id)
 ```
 
 ### NYC Jobs
+
+Next, the NYC jobs data was brought in. Similar to USA jobs, NYC jobs also had non data related jobs listed so again those were filtered out. 
 
 ```{r clean-nyc-jobs}
 # change column titles to snake_case
@@ -264,7 +290,7 @@ nyc_jobs_cleaned <- nyc_jobs_filtered %>%
   filter(!is.na(job_quals))
 ```
 
-Using the same iteration as above to extract the skills from `job_quals` and `job_qualifications`:
+Next, using the same iteration as above to the skills from `job_quals` and `job_qualifications` was extracted.
 
 ```{r nyc-jobs-skills}
 nyc_jobs_skills <- extractSkills(nyc_jobs_cleaned, skills_dictionary)
@@ -274,13 +300,16 @@ length(unique(nyc_jobs_skills)$job_id) == length(nyc_jobs_skills$job_id)
 
 # eliminate redundancy
 nyc_jobs_skills <- unique(nyc_jobs_skills)
+
+# check again
+length(unique(nyc_jobs_skills)$job_id) == length(nyc_jobs_skills$job_id)
 ```
 
 ### Data Analyst Jobs
 
 This csv file was generated by Kayleah Griffen by web scraping [dataanalyst.com](https://www.dataanalyst.com/). 
 
-The data frame already includes a column for job title. There is no indication of job id for any of the listing, so the `X` column will be used as the `job_id`. Skills will be extracted from the `job_requirement` and `job_roles` columns renamed as `job_quals` and `job_descriptions` to fit the format previously created for the other data frames. 
+The data frame already included a column for job title. There is no indication of job id for any of the listing, so the `X` column will be used as the `job_id`. Skills will be extracted from the `job_requirement` and `job_roles` columns renamed as `job_quals` and `job_descriptions` to fit the format previously created for the other data frames. 
 
 The job id here seems to be a combination of the job title and then a series of number or letters afterward. 
 
@@ -314,7 +343,7 @@ data_analyst_jobs_cleaned <- data_analyst_jobs_cleaned %>%
 length(unique(data_analyst_jobs_cleaned$job_id)) == length(data_analyst_jobs_cleaned$job_id)
 ```
 
-Extracting the skills from the data analyst job listing:
+Next the skills were extracted from the data analyst job listing:
 
 ```{r}
 data_analyst_jobs_skills <- extractSkills(data_analyst_jobs_cleaned, skills_dictionary)
@@ -325,7 +354,7 @@ length(unique(data_analyst_jobs_skills)$job_id) == length(data_analyst_jobs_skil
 
 ## Combining Data Frames
 
-To create a full data frame of all the job listing and all the skills, combine the jobs data sets into `job_listings` and the skills data sets into `skills`.
+To create a full data frame of all the job listing and all the skills, the jobs data sets were merged into `job_listings` and the skills data sets were merged into `skills`.
 
 ```{r combine-df}
 job_listings <- ai_jobs_cleaned %>%
@@ -339,10 +368,24 @@ skills <- ai_jobs_skills %>%
   rbind(data_analyst_jobs_skills)
 ```
 
-Create separate CSV files for each required data frame to be analyzed. This will allow for quick loading for the analysis. 
+Separate CSV files for each required data frame were created to be analyzed. 
 
 ```{r write-csvs, eval=F}
 write.csv(job_listings, "output/job_listings.csv", row.names=F)
 
 write.csv(skills, "output/skills.csv", row.names=F)
 ```
+
+## Conclusion
+
+For this stage of the analysis, the objective to create clean dataframes - one for skills and one for job posting information - was met. Some notes on limitations and possible extensions of this work are:
+
+1) The job postings data in the github repository will become dated. If someone was interested in updating the data they would need to run the python files for scraping again and re-upload the files to the github repository.
+
+2) Our skills dictionary will become dated if new data science skills emerge. Potentially an unstructured learning approach - where skills are detected from all jobs postings - could be implemented to combat this. 
+
+3) Duplicated job listing across job boards was not checked for. To extend this work we would find a robust method for checking for duplication such as including the company in the `job_listings` dataframe and checking for exact matches of the rest of the columns of the dataframe aside from `job_id` and `website`.
+
+4) The processing time for the code will get longer as more skills and more job listings are added. To speed up the process we would need to research ways to adapt the `extractSkills` function to make it faster.
+
+Overall, our processing of the job listings into the skills was successful and provides a foundation for the next stage of the project which is to analyze the data to determine the most valued data science skills. 
