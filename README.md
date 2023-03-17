@@ -1,12 +1,6 @@
 # D607_Project3
 
-This github repository is a compilation of the work completed to determine today's most valued data science skills. This work is a collaboration of effort by:
-
-Waheeb Algabri
-Keith Colella
-John Cruz
-Shoshana Farber
-Kayleah Griffen
+This github repository is a compilation of the work completed to determine today's most valued data science skills. This work is a collaboration of effort by Waheeb Algabri, Keith Colella, John Cruz, Shoshana Farber, and Kayleah Griffen.
 
 --------------------------------------------------------------------------------------------------------------------------
 
