@@ -343,7 +343,6 @@ Create separate CSV files for each required data frame to be analyzed. This will
 
 ```{r write-csvs, eval=F}
 write.csv(job_listings, "output/job_listings.csv", row.names=F)
-write.csv(job_listings, "job_recommendations/job_listings.csv", row.names=F)
 
 write.csv(skills, "output/skills.csv", row.names=F)
 ```

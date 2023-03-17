@@ -60,7 +60,18 @@ job_listings <- job_listings %>%
                                                   origin = 'country.name',
                                                   destination = 'continent')),
          country = case_when(str_detect(location, '[A-Z]{2}') ~ 'United States',
-                             TRUE ~ location)
+                             TRUE ~ location),
+         
+         salary_min = case_when(salary_currency == 'GBP' ~ salary_min * 1.21,
+                                salary_currency == 'EUR' ~ salary_min * 1.06,
+                                TRUE ~ salary_min),
+         salary_max = case_when(salary_currency == 'GBP' ~ salary_max * 1.21,
+                                salary_currency == 'EUR' ~ salary_max * 1.06,
+                                TRUE ~ salary_max),
+         salary_currency = case_when(salary_currency == 'GBP' ~ 'USD',
+                                     salary_currency == 'EUR' ~ 'USD',
+                                     TRUE ~ salary_currency)
+         
          ) %>%
   select(-combo_details)
 ```
@@ -84,23 +95,28 @@ job_listings_skills <- job_listings %>%
 
 job_listings_skills_long <- job_listings_skills %>%
   unnest_longer(col = skills, values_to = 'skills', indices_include = FALSE)
+
+job_listings_skills_string <- job_listings_skills %>%
+  rowwise() %>% 
+  mutate(skills = paste(unlist(skills), collapse=', ')) %>%
+  ungroup()
 ```
 
 We now can write the two dataframes to csv.
 
 ```{r}
-#### Unable to write df with list-column to csv. Need to consider solutions.
-
 write.csv(job_listings, "output/job_listings_enhanced.csv", row.names = FALSE)
 write.csv(job_listings_skills_long, "output/job_listings_skills_long.csv", row.names = FALSE)
+write.csv(job_listings_skills_string, "output/job_listings_skills_string.csv", row.names = FALSE)
+write.csv(job_listings_skills_string, "job_recommendations/job_listings_skills_string.csv", row.names = FALSE)
 ```
 
 
 Finally, we take a quick look at the cleaned data from each source.
 
 ```{r}
-for (source in unique(job_listings_skills$website)) {
-  tbl <- job_listings_skills %>%
+for (source in unique(job_listings_skills_string$website)) {
+  tbl <- job_listings_skills_string %>%
     filter(website == source,
            !is.na(highest_ed),
            !is.na(years_exp)) %>%
@@ -118,7 +134,4 @@ for (source in unique(job_listings_skills_long$website)) {
 }
 ```
 
-```{r}
-job_listings[job_listings$job_id == 37018, 'job_description']
-```
 

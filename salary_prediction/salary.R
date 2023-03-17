@@ -25,47 +25,45 @@ skills <- df_cols[str_which(
 
 # Define UI
 ui <- fluidPage(
-
-    # Application title
-    titlePanel('Data Scientist Salary Prediction'),
-
-    # Sidebar with inputs
-    sidebarLayout(
-        sidebarPanel(
-          
-            # Years of Experience
-            sliderInput('experience',
-                        'Years of Work Experience:',
-                        min = 1,
-                        max = 20,
-                        value = 5),
-            
-            # Education
-            radioButtons('ed',
-                         'Highest Level of Education:',
-                         choices = degrees
-            ),
-            
-            # Location
-            radioButtons('loc',
-                         'Desired Location:',
-                         choices = locations
-            ),
-            
-            # Skills
-            checkboxGroupInput('skills',
-                               'Skills / Knowledge You Possess:',
-                               choices = skills
-            
-            )
-            
-        ),
-
-        # Show salary prediction
-        mainPanel(
-          textOutput('prediction')
-        )
-    )
+  
+  # Application title
+  titlePanel('Data Scientist Salary Prediction'),
+  
+  # Show salary prediction
+  mainPanel(
+    
+    
+    # Years of Experience
+    sliderInput('experience',
+                'Years of Work Experience:',
+                min = 1,
+                max = 20,
+                value = 5
+    ),
+    
+    # Education
+    radioButtons('ed',
+                 'Highest Level of Education:',
+                 choices = degrees,
+                 inline = TRUE
+    ),
+    
+    # Location
+    radioButtons('loc',
+                 'Desired Location:',
+                 choices = locations,
+                 inline = TRUE
+    ),
+    
+    # Skills
+    checkboxGroupInput('skills',
+                       'Skills / Knowledge You Possess:',
+                       choices = skills,
+                       inline = TRUE
+    ),
+    
+    textOutput('prediction')
+  )
 )
 
 # Define server logic
@@ -74,7 +72,7 @@ server <- function(input, output) {
     output$prediction <- renderPrint({
         
         # Create dataframe
-        df <- data.frame(matrix(nrow = 1, ncol = 23))
+        df <- data.frame(matrix(nrow = 1, ncol = length(df_cols)))
         colnames(df) <- df_cols_display
         
         # Capture years of experience
