@@ -13,21 +13,63 @@ library(ggwordcloud)
 
 ## Read in data
 
+Read the data from a CSV file  which containing job listings and skills
+
 ```{r message=F}
 # jobs <- read_csv('output/job_listings_skills.csv')
 jobs_long <- read_csv('output/job_listings_skills_long.csv')
 ```
 
+
+Display the column names of the jobs_long
+
+```{r}
+names(jobs_long)
+```
+
+
+First we have to to check any missing values in the highest_ed
+ 
+```{r}
+sum(is.na(jobs_long$highest_ed))
+
+```
+
+
 ## Visualizations
+
+
+##### Which education level is more prevalent among different job types.
 
 ```{r}
 jobs_long %>%
+  na.omit() %>%
   group_by(job_id, highest_ed) %>%
   summarize(jobs = n(), .groups = 'keep') %>%
   ggplot(aes(highest_ed)) +
   geom_bar()
 
+```
+
+the highest bar in the plot is representing "Master.
+
+One way to confirm this is to use the count() function to count the number of observations for each level of the highest_ed variable and arrange them in descending order
+
+
+```{r}
 jobs_long %>%
+  na.omit() %>%
+  count(highest_ed, sort = TRUE)
+```
+
+Based on the information we got, it seems that the "Master" category has the highest count with 7003 observations, followed by "PhD" with 6452 observations, and then "Bachelor" with 5585 observations.
+
+
+##### maximum salaries for each job
+
+```{r}
+jobs_long %>%
+  na.omit() %>%
   group_by(job_id, salary_max) %>%
   summarize(jobs = n(), .groups = 'keep') %>%
   ggplot(aes(salary_max)) +
@@ -35,12 +77,40 @@ jobs_long %>%
   scale_x_continuous(label = scales::comma,
                      limits = c(0,500000))
 
+```
+
+
+
+```{r}
+ggplot(na.omit(jobs_long), aes(x = salary_max, fill = highest_ed)) +
+  geom_histogram(binwidth = 20000, alpha = 0.7) +
+  scale_x_continuous(label = scales::comma, limits = c(0, 500000)) +
+  scale_fill_brewer(type = "qual", palette = "Set1") +
+  labs(title = "Distribution of maximum salaries by highest education level",
+       x = "Salary (USD)", y = "Count")
+
+```
+
+
+The histograms show the distribution of maximum salary values for each job position in the jobs_long dataset, with missing values removed.
+
+The x-axis represents the maximum salary values, and the y-axis represents the count of jobs with those maximum salary values.
+
+From the plots, we can see that the majority of jobs have a maximum salary value between 0 and 100000. There are relatively fewer jobs with a maximum salary value between 100000 and 200000, and even fewer with a maximum salary value between 200000 and 300000. There are only a few jobs with a maximum salary value above 300000.
+
+##### Years of experience
+
+```{r}
 jobs_long %>%
   group_by(job_id, years_exp) %>%
   summarize(jobs = n(), .groups = 'keep') %>%
   ggplot(aes(years_exp)) +
   geom_bar()
 
+```
+
+
+```{r}
 jobs_long %>%
   group_by(job_id, years_exp, highest_ed) %>%
   summarize(jobs = n(), .groups = 'keep') %>%
@@ -50,26 +120,15 @@ jobs_long %>%
   facet_grid(~highest_ed,
              labeller = label_wrap_gen(width=2, multi_line=TRUE))
 
-jobs_long %>%
-  group_by(job_id, salary_max, highest_ed) %>%
-  summarize(jobs = n(), .groups = 'keep') %>%
-  filter(!is.na(highest_ed)) %>%
-  ggplot(aes(salary_max, ..density..)) +
-  geom_histogram(binwidth = 20000) +
-  scale_x_continuous(label = scales::comma,
-                     limits = c(0,500000)) +
-  theme(axis.text.x = element_text(angle=90)) +
-  facet_grid(~highest_ed,
-             labeller = label_wrap_gen(width=2, multi_line=TRUE))
-
-## We need to do some cleanup on location
-jobs_long %>%
-  ggplot(aes(fct_rev(fct_infreq(location)))) +
-  geom_bar() +
-  coord_flip()
 ```
 
-## Most Frequently Cited Skills
+
+This plot shows the distribution of years of experience for different job positions and education levels. Each facet represents a different education level, with the x-axis showing the range of years of experience and the y-axis representing the density of the observations in that range.
+
+The plot suggests that there are differences in the distribution of years of experience across different job positions and education levels. For example, among individuals with a Bachelor's degree, the distribution of years of experience appears to be skewed towards the lower end, suggesting that many individuals in these positions have relatively little experience. On the other hand, among individuals with a PhD, the distribution of years of experience appears to be more evenly spread out, suggesting that individuals with a PhD may have more varied levels of experience.
+
+
+##### Most Frequently Cited Skills
 
 ```{r}
 jobs_long %>%
@@ -162,33 +221,10 @@ ggplot(exp5_skill_counts, aes(label = skills, size = counts, color = factor(samp
 
 ```
 
-
-```{r}
-ggplot(jobs_long, aes(x = years_exp, y = salary_max, color = highest_ed)) +
-  geom_point(alpha = 0.6) +
-  scale_y_continuous(labels = scales::comma) +
-  labs(x = 'Years of experience', y = 'Maximum salary', color = 'Education level')
-
-```
-
+The code is creating a word cloud of skills that are required for jobs with 5 or more years of experience. The jobs_long data frame is filtered to keep only the rows where the years_exp column is greater than or equal to 5, and then grouped by the skills column.
 
 
 ```{r}
-# Plot a histogram of salaries by highest education level
-ggplot(jobs_long, aes(x = salary_max, fill = highest_ed)) +
-  geom_histogram(binwidth = 20000, alpha = 0.7) +
-  scale_x_continuous(label = scales::comma, limits = c(0, 500000)) +
-  scale_fill_brewer(type = "qual", palette = "Set1") +
-  labs(title = "Distribution of maximum salaries by highest education level",
-       x = "Salary (USD)", y = "Count")
-
-# Plot a scatterplot of salary versus years of experience, colored by location
-ggplot(jobs_long, aes(x = years_exp, y = salary_max, color = location)) +
-  geom_point(alpha = 0.7) +
-  scale_x_continuous(limits = c(0, 20)) +
-  scale_y_continuous(label = scales::comma, limits = c(0, 500000)) +
-  labs(title = "Salary versus years of experience, by location",
-       x = "Years of experience", y = "Salary (USD)")
 
 # Plot a word cloud of the most frequently cited skills
 skills_freq <- jobs_long %>%
@@ -200,12 +236,26 @@ ggplot(skills_freq, aes(label = skills, size = n)) +
   theme_minimal() +
   labs(title = "Most frequently cited skills")
 
+```
+This code generates a word cloud plot of the most frequently cited skills in the jobs_long dataset. It first creates a new dataframe called skills_freq that counts the frequency of each skill in the skills column of jobs_long, arranges them in descending order, and selects the top 100. It then uses ggplot and geom_text_wordcloud to plot the skill names as words, with the size of the word indicating the frequency of the skill. The plot is given a title "Most frequently cited skills
+
+
+##### Number of job listings per website
+
+```{r}
+
 # Plot a bar chart of the number of job listings per website
 ggplot(jobs_long, aes(x = website)) +
   geom_bar(fill = "steelblue") +
   coord_flip() +
   labs(title = "Number of job listings per website",
        x = "Website", y = "Count")
+```
+
+
+
+```{r}
+
 
 # Plot a stacked bar chart of the number of job listings by location and highest education level
 ggplot(jobs_long, aes(x = highest_ed, fill = location)) +
@@ -215,6 +265,10 @@ ggplot(jobs_long, aes(x = highest_ed, fill = location)) +
   theme(legend.position = "bottom")
 
 ```
+
+The code is generating a stacked bar chart that shows the number of job listings for each combination of location and highest education level. The x-axis represents the highest education level and the bars are stacked by location. 
+
+
 
 **What are the top 10 most important skills for data science?**
 
@@ -277,4 +331,12 @@ data_analyst_top10 %>%
     labs(title = "Top 10 Skills for Data Analysts", x = "Frequency", y = "Skill") +
     theme(legend.position = "none")
 ```
+
+
+## conclusion 
+
+The "Master" education level is the most prevalent among different job types, followed by "PhD" and "Bachelor".
+The majority of jobs have a maximum salary value between 0 and 100,000 USD. There are relatively fewer jobs with a maximum salary value between 100,000 and 200,000 USD, and even fewer with a maximum salary value between 200,000 and 300,000 USD. There are only a few jobs with a maximum salary value above 300,000 USD.
+There are differences in the distribution of years of experience across different job positions and education levels. For example, among individuals with a Bachelor's degree, the distribution of years of experience appears to be skewed towards the lower end, suggesting that many individuals in these positions have relatively little experience. On the other hand, among individuals with a PhD, the distribution of years of experience appears to be more evenly spread out, suggesting that individuals with a PhD may have more varied levels of experience.
+The most frequently cited skills in the job listings are "Python", "SQL", and "Machine Learning". The top skills cited in the job listings vary depending on the highest education level required and the job location.
 
