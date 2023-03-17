@@ -64,7 +64,7 @@ jobs_long %>%
 
 ## We need to do some cleanup on location
 jobs_long %>%
-  ggplot(aes(fct_rev(fct_infreq(location)))) +
+  ggplot(aes(fct_rev(fct_infreq(continent)))) +
   geom_bar() +
   coord_flip()
 ```

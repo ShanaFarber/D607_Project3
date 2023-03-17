@@ -4,7 +4,7 @@ library(tidyverse)
 
 # Read in data and define knn function
 jobs_skills_matrix <- read.csv('jobs_skills_matrix.csv', row.names = 1)
-job_listings <- read.csv('job_listings.csv')
+job_listings <- read.csv('job_listings_skills_string.csv')
 knn <- function(i, distance_matrix, k = 5) {
   neighbors <- data.frame(dist = distance_matrix[i,])
   k_nearest_ids <- arrange(neighbors, dist) %>% 
@@ -34,9 +34,10 @@ ui <- fluidPage(
   
   # Application title
   titlePanel('Data Scientist Job Recommendations'),
-    
-  # Show salary prediction
+  
+  # User input and resulting table of matches
   mainPanel(
+    
     # Years of Experience
     sliderInput('experience',
                 'Years of Work Experience:',
@@ -68,7 +69,7 @@ ui <- fluidPage(
     
     # textOutput('matches')
     DT::dataTableOutput('matches')
-  
+    
   )
   
 )
@@ -80,7 +81,7 @@ server <- function(input, output) {
   output$matches <- DT::renderDataTable({
     
     # Create dataframe
-    df <- data.frame(matrix(nrow = 1, ncol = 23))
+    df <- data.frame(matrix(nrow = 1, ncol = length(df_cols)  ))
     colnames(df) <- df_cols_display
     
     # Capture years of experience
@@ -116,7 +117,10 @@ server <- function(input, output) {
     match_ids <- match_ids[match_ids != last_row_name]
     
     output_df <- job_listings[job_listings$job_id %in% match_ids,]
-    output_df <- output_df %>% select(-job_description)
+    output_df <- output_df %>% select(-highest_ed,
+                                      -years_exp,
+                                      -continent,
+                                      -country)
     
     DT::datatable(output_df,
                   options = list(dom = 't'),

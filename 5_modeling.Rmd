@@ -102,6 +102,7 @@ jobs_skills_matrix <- jobs_long %>%
               names_prefix = 'loc_', values_fill = 0, values_fn = length) %>%
   pivot_wider(names_from = skills, values_from = skills,
               values_fill = 0, values_fn = length) %>%
+  column_to_rownames(., var = 'job_id') %>%
   select_if(is.numeric) %>%
   select(salary_max,
          years_exp,
@@ -110,8 +111,8 @@ jobs_skills_matrix <- jobs_long %>%
          which(colSums(., na.rm = TRUE) > 1000),
          -ed_NA,
          -loc_NA,
-         -salary_min)%>%
-  column_to_rownames(., var = 'job_id')
+         -salary_min)
+  
 
 colnames(jobs_skills_matrix) <- str_replace_all(
   colnames(jobs_skills_matrix),' ', '_')
