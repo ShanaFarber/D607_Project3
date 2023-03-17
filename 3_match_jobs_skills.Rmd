@@ -27,7 +27,7 @@ skills <- read_csv('output/skills.csv')
 Mutate was used to clean up and extract some additional variables. First, key columns (title, description, qualifications) were converted to lowercase and special characters were removed. The goal was to facilitate matches. Then, the highest education level requested in each listing was extracted, along with the max requested years of experience. A temporary "combo" field was created so that both job descriptions and qualifications fields could be easily reanalyzed. Also, the salary data was standardized into a common currency, USD.
 
 ```{r, warning=FALSE}
-job_listings <- job_listings %>%
+job_listings_enhanced <- job_listings %>%
   mutate(job_title = tolower(job_title) %>%
            str_replace_all('[â¢\u0080-\uFFFF]', ''),
          
@@ -86,13 +86,16 @@ job_listings <- job_listings %>%
 Next, all relevant skills from the qualifications and descriptions fields were extracted. These skills are first extracted into a list-column, with each row containing a list of unique skills mentioned in the job details. Then they are unnested to create another long-form dataframe to facilitate further analysis.
 
 ```{r}
-skills_unique <- unique(tolower(skills$skill))
-skill_regex_pattern <- paste0("\\b", 
-                              paste(skills_unique, collapse="\\b|\\b"),
-                              "\\b")
+skills_clean <- tolower(skills$skill) %>%
+  sort(decreasing = TRUE) %>%
+  str_replace_all('[â¢\u0080-\uFFFF]', '') %>%
+  str_replace_all('[‘’“”\\,\\.\\(\\)\\;\\:\'\\?]','') %>%
+  str_replace_all('[-]', ' ')
+skill_regex_pattern <- paste0('\\b', paste(skills_clean, collapse = '\\b|\\b'), '\\b') %>%
+  str_replace_all('c\\+\\+\\\\b','c\\\\\\+\\\\\\+\\(\\?\\= \\)') %>%
+  str_replace_all('c#\\\\b','c\\\\\\#\\(\\?\\= \\)')
 
-
-job_listings_skills <- job_listings %>%
+job_listings_skills <- job_listings_enhanced %>%
   mutate(combo_details = str_c(job_quals, job_description),
          skills = str_extract_all(combo_details, skill_regex_pattern)) %>%
   select(-combo_details, -job_quals, -job_description) %>%
@@ -107,6 +110,16 @@ job_listings_skills_string <- job_listings_skills %>%
   rowwise() %>% 
   mutate(skills = paste(unlist(skills), collapse=', ')) %>%
   ungroup()
+```
+
+```{r}
+test <- job_listings_enhanced %>% filter(job_id == 41765)
+
+job_listings_skills <- test %>%
+  mutate(combo_details = str_c(job_quals, job_description),
+         skills = str_extract_all(combo_details, skill_regex_pattern))# %>% '\\bc\\+\\+ \\b'
+
+job_listings_skills$skills
 ```
 
 
@@ -191,7 +204,7 @@ kable(head(job_listings_skills_long,5))  |>
 The two dataframes were written to csv files.
 
 ```{r}
-write.csv(job_listings, "output/job_listings_enhanced.csv", row.names = FALSE)
+write.csv(job_listings_enhanced, "output/job_listings_enhanced.csv", row.names = FALSE)
 write.csv(job_listings_skills_long, "output/job_listings_skills_long.csv", row.names = FALSE)
 write.csv(job_listings_skills_string, "output/job_listings_skills_string.csv", row.names = FALSE)
 write.csv(job_listings_skills_string, "job_recommendations/job_listings_skills_string.csv", row.names = FALSE)
