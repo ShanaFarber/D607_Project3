@@ -82,13 +82,26 @@ salaries |>
   labs(title = "Maximum Salary Distribution", x = '', y = '') +
   theme_bw() +
   stat_bin(binwidth=25000, geom='text', color='white', size=3,
-           aes(label=..count..), position=position_stack(vjust=0.8))
+           aes(label=after_stat(count)), position=position_stack(vjust=0.8))
 ```
 
-## Title
+## Maximum Salary Distribution vs. Education
 
 ```{r rename}
+salaries <- 
+  import_df |> 
+  filter(!is.na(salary_max)) |> 
+  distinct(job_id, .keep_all = TRUE)
+  
 
+salaries |> 
+  ggplot(aes(x = salary_max)) +
+  geom_histogram(binwidth = 25000, fill = '#4E79A7') +
+  scale_x_continuous(labels = scales::dollar) +
+  labs(title = "Maximum Salary Distribution", x = '', y = '') +
+  theme_bw() +
+  stat_bin(binwidth=25000, geom='text', color='white', size=3,
+           aes(label=after_stat(count)), position=position_stack(vjust=0.8))
 ```
 
 ## Title

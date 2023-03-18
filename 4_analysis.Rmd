@@ -1,7 +1,7 @@
 ---
-title: "DATA 607 - Project 3 - Analysis"
-author: "Keith Colella"
-date: "`r Sys.Date()`"
+title: "Visualizations"
+author: "John Cruz"
+date: "3-16-2022"
 output: html_document
 ---
 
@@ -13,139 +13,181 @@ library(ggwordcloud)
 
 ## Read in data
 
-Read the data from a CSV file  which containing job listings and skills
+Read the data from a CSV file which contains job listings and skills
 
-```{r message=F}
-# jobs <- read_csv('output/job_listings_skills.csv')
-jobs_long <- read_csv('output/job_listings_skills_long.csv')
+```{r message=FALSE}
+import_df <- read_csv('output/job_listings_skills_long.csv')
 ```
 
+## Job Listings Based on Data Source
 
-Display the column names of the jobs_long
+```{r website-count}
+distinct_job_website <- 
+  import_df |> 
+  group_by(website) |> 
+  summarise(count = n_distinct(job_id)) |> 
+  arrange(desc(count))
 
-```{r}
-names(jobs_long)
+ggplot(distinct_job_website, aes(x = count, y = reorder(website, count))) +
+  geom_bar(stat = 'identity', fill = '#4E79A7') +
+  labs(title = "Job Listings per Website", x = '', y = '') +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(),
+        axis.text = element_text(face = 'bold'))
+
+knitr::kable(distinct_job_website)
 ```
 
+## Most Requested Degree
 
-First we have to to check any missing values in the highest_ed
- 
-```{r}
-sum(is.na(jobs_long$highest_ed))
+Based on the job postings that had college degree information, having a Master's was first at 498, followed by a Bachelor's at 457. 
 
+```{r college-degree}
+high_degree <- 
+  import_df |> 
+  na.omit(highest_ed) %>%
+  group_by(highest_ed) %>%
+  summarize(count = n_distinct(job_id))
+
+high_degree %>%
+  ggplot(aes(x = highest_ed, y = count)) +
+  geom_bar(stat = 'identity', fill = '#4E79A7') + 
+  labs(title = "Most Degrees Requested", x = '', y = '') +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(),
+        axis.text = element_text(face = 'bold')) +
+  geom_text(aes(label = count), 
+            position = position_stack(vjust = 0.8), 
+            size = 4,
+            fontface = 'bold',
+            color = 'white')
+
+knitr::kable(high_degree)
 ```
 
+## Maximum Salary Distribution
 
-## Visualizations
+The histogram shows the distribution of maximum salary values for all jobs within the dataset, with missing values removed. We can see that there is a bi-modal distribution where it peaks first at \$125,000 with 1,365 jobs and again at \$175,000 with 986 jobs. 
 
+```{r salary}
+salaries <- 
+  import_df |> 
+  filter(!is.na(salary_max)) |> 
+  distinct(job_id, .keep_all = TRUE)
+  
 
-##### Which education level is more prevalent among different job types.
-
-```{r}
-jobs_long %>%
-  na.omit() %>%
-  group_by(job_id, highest_ed) %>%
-  summarize(jobs = n(), .groups = 'keep') %>%
-  ggplot(aes(highest_ed)) +
-  geom_bar()
-
+salaries |> 
+  ggplot(aes(x = salary_max)) +
+  geom_histogram(binwidth = 25000, fill = '#4E79A7') +
+  scale_x_continuous(labels = scales::dollar) +
+  labs(title = "Maximum Salary Distribution", x = '', y = '') +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(),
+        axis.text = element_text(face = 'bold')) +
+  stat_bin(binwidth=25000, geom='text', color='white', size=3,
+           aes(label=after_stat(count)), position=position_stack(vjust=0.8))
 ```
 
-the highest bar in the plot is representing "Master.
+## Maximum Salary Distribution vs. Education
 
-One way to confirm this is to use the count() function to count the number of observations for each level of the highest_ed variable and arrange them in descending order
+Separating our bi-modal distribution based on education, we can still see the same type of distribution and peaks as before.
 
+```{r salary-edu}
+salaries_edu <- 
+  import_df |> 
+  filter(!is.na(salary_max), !is.na(highest_ed)) |> 
+  distinct(job_id, .keep_all = TRUE)
+  
 
-```{r}
-jobs_long %>%
-  na.omit() %>%
-  count(highest_ed, sort = TRUE)
+salaries_edu |> 
+  ggplot(aes(x = salary_max)) +
+  geom_histogram(binwidth = 25000, fill = '#4E79A7') +
+  scale_x_continuous(labels = scales::dollar) +
+  labs(title = "Maximum Salary Distribution vs. Education", x = '', y = '') +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(),
+        axis.text = element_text(face = 'bold')) +
+  stat_bin(binwidth=25000, geom='text', color='white', size=3,
+           aes(label=after_stat(count)), position=position_stack(vjust=0.8)) +
+  facet_grid(rows = vars(highest_ed))
 ```
 
-Based on the information we got, it seems that the "Master" category has the highest count with 7003 observations, followed by "PhD" with 6452 observations, and then "Bachelor" with 5585 observations.
+## Maximum Salary Distribution vs. Years of Experience
+
+Separating our bi-modal distribution based on years of experience, we again can still see the same type of distribution and peaks as before.
+
+```{r salary-experience}
+salaries_exp <- 
+  import_df |> 
+  filter(!is.na(salary_max), !is.na(years_exp)) |> 
+  distinct(job_id, .keep_all = TRUE) |> 
+  mutate(exp_bins = case_when(years_exp <= 2 ~ "0-2",
+                              years_exp > 2 & years_exp <= 5 ~ "3-5",
+                              years_exp > 5 & years_exp <= 8 ~ "6-8",
+                              years_exp > 8  ~ "9+")) |> 
+  mutate(across(c(exp_bins), factor))
 
 
-##### maximum salaries for each job
-
-```{r}
-jobs_long %>%
-  na.omit() %>%
-  group_by(job_id, salary_max) %>%
-  summarize(jobs = n(), .groups = 'keep') %>%
-  ggplot(aes(salary_max)) +
-  geom_histogram(binwidth = 20000) +
-  scale_x_continuous(label = scales::comma,
-                     limits = c(0,500000))
-
+salaries_exp |> 
+  ggplot(aes(x = salary_max)) +
+  geom_histogram(binwidth = 25000, fill = '#4E79A7') +
+  scale_x_continuous(labels = scales::dollar) +
+  labs(title = "Maximum Salary Distribution vs. Years of Experience", x = '', y = '') +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(),
+        axis.text = element_text(face = 'bold')) +
+  stat_bin(binwidth=25000, geom='text', color='white', size=3,
+           aes(label=after_stat(count)), position=position_stack(vjust=0.8)) +
+  facet_grid(rows = vars(exp_bins))
 ```
 
+## Education and Years of Experience
 
+Based on the chart, we can identify that most jobs primarily look for candidates with 3-5 years of experience. However, the plot also suggests that there are differences in the distribution of years of experience within each educational level. For example, among individuals with a Bachelor's degree, the distribution of years of experience appears to be skewed towards the lower end, suggesting that many individuals in these positions have relatively little experience. On the other hand, among individuals with a PhD, the distribution of years of experience appears to be more evenly spread out, suggesting that individuals with a PhD may have more varied levels of experience.
 
-```{r}
-ggplot(na.omit(jobs_long), aes(x = salary_max, fill = highest_ed)) +
-  geom_histogram(binwidth = 20000, alpha = 0.7) +
-  scale_x_continuous(label = scales::comma, limits = c(0, 500000)) +
-  scale_fill_brewer(type = "qual", palette = "Set1") +
-  labs(title = "Distribution of maximum salaries by highest education level",
-       x = "Salary (USD)", y = "Count")
+```{r education-exp}
+edu_exp <- 
+  import_df |> 
+  filter(!is.na(highest_ed), !is.na(years_exp)) |> 
+  distinct(job_id, .keep_all = TRUE) |> 
+  mutate(exp_bins = case_when(years_exp <= 2 ~ "0-2",
+                              years_exp > 2 & years_exp <= 5 ~ "3-5",
+                              years_exp > 5 & years_exp <= 8 ~ "6-8",
+                              years_exp > 8  ~ "9+")) |> 
+  mutate(across(c(exp_bins), factor))
 
-```
-
-
-The histograms show the distribution of maximum salary values for each job position in the jobs_long dataset, with missing values removed.
-
-The x-axis represents the maximum salary values, and the y-axis represents the count of jobs with those maximum salary values.
-
-From the plots, we can see that the majority of jobs have a maximum salary value between 0 and 100000. There are relatively fewer jobs with a maximum salary value between 100000 and 200000, and even fewer with a maximum salary value between 200000 and 300000. There are only a few jobs with a maximum salary value above 300000.
-
-##### Years of experience
-
-```{r}
-jobs_long %>%
-  group_by(job_id, years_exp) %>%
-  summarize(jobs = n(), .groups = 'keep') %>%
-  ggplot(aes(years_exp)) +
-  geom_bar()
-
-```
-
-
-```{r}
-jobs_long %>%
-  group_by(job_id, years_exp, highest_ed) %>%
-  summarize(jobs = n(), .groups = 'keep') %>%
-  filter(!is.na(highest_ed)) %>%
-  ggplot(aes(years_exp, ..density..)) +
-  geom_histogram(binwidth = 3) +
+edu_exp |> ggplot(aes(exp_bins)) +
+  geom_bar(aes(fill = exp_bins)) +
   facet_grid(~highest_ed,
-             labeller = label_wrap_gen(width=2, multi_line=TRUE))
+             labeller = label_wrap_gen(width=2, multi_line=TRUE)) +
+  labs(title = "Education vs. Years of Experience", 
+       x = '', y = '',
+       fill = "Years of Experience") +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(),
+        axis.text = element_text(face = 'bold'),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) +
+  scale_fill_brewer(palette = 'Set1')
+```
 
-<<<<<<< HEAD
-=======
-jobs_long %>%
-  group_by(job_id, salary_max, highest_ed) %>%
-  summarize(jobs = n(), .groups = 'keep') %>%
-  filter(!is.na(highest_ed)) %>%
-  ggplot(aes(salary_max, ..density..)) +
-  geom_histogram(binwidth = 20000) +
-  scale_x_continuous(label = scales::comma,
-                     limits = c(0,500000)) +
-  theme(axis.text.x = element_text(angle=90)) +
-  facet_grid(~highest_ed,
-             labeller = label_wrap_gen(width=2, multi_line=TRUE))
+## Title
 
-## We need to do some cleanup on location
-jobs_long %>%
-  ggplot(aes(fct_rev(fct_infreq(continent)))) +
-  geom_bar() +
-  coord_flip()
->>>>>>> main
+```{r rename4}
+explore <- read_csv('output/job_listings.csv')
+explore |> 
+  group_by(website) |> 
+  summarise(count = n())
 ```
 
 
-This plot shows the distribution of years of experience for different job positions and education levels. Each facet represents a different education level, with the x-axis showing the range of years of experience and the y-axis representing the density of the observations in that range.
 
-The plot suggests that there are differences in the distribution of years of experience across different job positions and education levels. For example, among individuals with a Bachelor's degree, the distribution of years of experience appears to be skewed towards the lower end, suggesting that many individuals in these positions have relatively little experience. On the other hand, among individuals with a PhD, the distribution of years of experience appears to be more evenly spread out, suggesting that individuals with a PhD may have more varied levels of experience.
+
+
+
+
+------------------
+
 
 
 ##### Most Frequently Cited Skills
@@ -264,15 +306,27 @@ This code generates a word cloud plot of the most frequently cited skills in the
 
 ```{r}
 
+distinct_job_website <- 
+  jobs_long |> 
+  group_by(website) |> 
+  summarise(count = n_distinct(job_id))
+
 # Plot a bar chart of the number of job listings per website
-ggplot(jobs_long, aes(x = website)) +
-  geom_bar(fill = "steelblue") +
+ggplot(distinct_job_website, aes(x = website, y = count)) +
+  geom_bar(fill = "steelblue", stat = 'identity') +
   coord_flip() +
   labs(title = "Number of job listings per website",
        x = "Website", y = "Count")
 ```
 
+# Resample 
+```{r}
 
+jobs_long |> 
+  filter(is.na(location)) |> 
+  group_by(website) |> 
+  summarise(count = n_distinct(job_id))
+```
 
 ```{r}
 
