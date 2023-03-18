@@ -338,11 +338,23 @@ The code is generating a stacked bar chart that shows the number of job listings
 
 ```{r loc-edu}
 # Plot a stacked bar chart of the number of job listings by location and highest education level
-ggplot(import_df, aes(x = highest_ed, fill = continent)) +
-  geom_bar() +
+loc_edu <-
+  import_df |> 
+  na.omit(continent, highest_ed) |>
+  group_by(continent, highest_ed) |> 
+  summarise(count = n_distinct(job_id), .groups = "keep")
+
+ loc_edu |> 
+  ggplot(aes(y = reorder(continent, count), x = count, fill = continent)) +
+  geom_bar(stat = 'identity') +
   labs(title = "Number of job listings by location and highest education level",
-       x = "Highest education level", y = "Count") +
-  theme(legend.position = "bottom")
+       x = "", y = "") +
+  theme_bw() +
+  theme(legend.position = "none") +
+   facet_grid(cols = vars(highest_ed)) +
+   scale_fill_brewer(palette = "Dark2") 
+   
+ knitr::kable(loc_edu |> pivot_wider(names_from = highest_ed, values_from = count))
 ```
 
 ## Conclusion 
