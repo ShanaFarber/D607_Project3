@@ -1,30 +1,125 @@
 ---
 title: "Visualizations"
 author: "John Cruz"
-date: "2023-03-18"
+date: "3-16-2022"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, message=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(ggwordcloud)
 ```
 
-## R Markdown
+## Read in data
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+Read the data from a CSV file which contains job listings and skills
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r message=FALSE}
+import_df <- read_csv('output/job_listings_skills_long.csv')
 ```
 
-## Including Plots
+## Job Listings Based on Data Source
 
-You can also embed plots, for example:
+```{r website-count}
+distinct_job_website <- 
+  import_df |> 
+  group_by(website) |> 
+  summarise(count = n_distinct(job_id)) |> 
+  arrange(desc(count))
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+ggplot(distinct_job_website, aes(x = count, y = reorder(website, count))) +
+  geom_bar(stat = 'identity', fill = '#4E79A7') +
+  labs(title = "Job Listings per Website", x = '', y = '') +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(),
+        axis.text = element_text(face = 'bold'))
+
+knitr::kable(distinct_job_website)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## Most Requested Degree
+
+Based on the job postings that had college degree information, having a Master's was first at 498, followed by a Bachelor's at 457. 
+
+```{r college-degree}
+high_degree <- 
+  import_df |> 
+  na.omit(highest_ed) %>%
+  group_by(highest_ed) %>%
+  summarize(count = n_distinct(job_id))
+
+high_degree %>%
+  ggplot(aes(x = highest_ed, y = count)) +
+  geom_bar(stat = 'identity', fill = '#4E79A7') + 
+  labs(title = "Most Degrees Requested", x = '', y = '') +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(),
+        axis.text = element_text(face = 'bold')) +
+  geom_text(aes(label = count), 
+            position = position_stack(vjust = 0.8), 
+            size = 4,
+            fontface = 'bold')
+
+knitr::kable(high_degree)
+```
+
+## Maximum Salary Distribution
+
+The histogram shows the distribution of maximum salary values for all jobs within the dataset, with missing values removed. We can see that there is a bi-modal distribution where it peaks first at \$125,000 with 1,365 jobs and again at \$175,000 with 986 jobs. 
+
+```{r salary}
+salaries <- 
+  import_df |> 
+  filter(!is.na(salary_max)) |> 
+  distinct(job_id, .keep_all = TRUE)
+  
+
+salaries |> 
+  ggplot(aes(x = salary_max)) +
+  geom_histogram(binwidth = 25000, fill = '#4E79A7') +
+  scale_x_continuous(labels = scales::dollar) +
+  labs(title = "Maximum Salary Distribution", x = '', y = '') +
+  theme_bw() +
+  stat_bin(binwidth=25000, geom='text', color='white', size=3,
+           aes(label=..count..), position=position_stack(vjust=0.8))
+```
+
+## Title
+
+```{r rename}
+
+```
+
+## Title
+
+```{r rename2}
+
+```
+
+## Title
+
+```{r rename3}
+
+```
+
+## Title
+
+```{r rename4}
+explore <- read_csv('output/job_listings.csv')
+explore |> 
+  group_by(website) |> 
+  summarise(count = n())
+```
+
+
+
+
+
+
+
+
+
+
+
+
