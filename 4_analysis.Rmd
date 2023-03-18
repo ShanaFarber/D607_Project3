@@ -1,5 +1,5 @@
 ---
-title: "Visualizations"
+title: "Analysis & Visualizations"
 author: "John Cruz"
 date: "3-16-2022"
 output: html_document
@@ -167,7 +167,8 @@ edu_exp |> ggplot(aes(exp_bins)) +
   theme(panel.grid.major = element_blank(),
         axis.text = element_text(face = 'bold'),
         axis.text.x=element_blank(),
-        axis.ticks.x=element_blank()) +
+        axis.ticks.x=element_blank(),
+        legend.position="top") +
   scale_fill_brewer(palette = 'Set1')
 ```
 
@@ -197,10 +198,82 @@ skill_counts |>
 knitr::kable(skill_counts |> head(20))
 ```
 
-## Title
+## What are the top 10 most important skills for data science?
 
-```{r rename5}
+```{r top10-ds}
+job_listings <- read.csv(url("https://raw.githubusercontent.com/ShanaFarber/D607_Project3/main/output/job_listings.csv"), na.strings=c(""))
+  
+skills <- read.csv(url("https://raw.githubusercontent.com/ShanaFarber/D607_Project3/main/output/skills.csv"))
 
+top_10 <- skills %>%
+  count(skill) %>%
+  arrange(desc(n)) %>%
+  head(n = 10)
+
+knitr::kable(top_10, col.names = c("Skills", "Count"), format.args = list(big.mark = ","))
+
+top_10 %>%
+  ggplot(aes(y = reorder(skill, n), x = n, fill = skill)) +
+    geom_bar(stat = "identity") +
+    labs(title = "Top 10 Skills for Data Science", x = "Count", y = "Skill") +
+    theme(legend.position = "none")
+```
+
+## What are the top skills for Data Scientists vs. Data Analysts?
+
+The highlighted bars shows the overlap in skills between both job titles. 
+
+```{r top-ds-da, fig.show='hold', out.width='50%', warning=FALSE, message=FALSE}
+# create a full data frame with the skills
+full <- job_listings %>%
+  left_join(skills, by="job_id")
+
+# filter for just data scientists and analysts
+data_scientist <- full %>% 
+  filter(str_detect(job_title, "Data Scientist")) %>%
+  mutate(job = "Data Scientist")
+  
+data_analyst <- full %>% 
+  filter(str_detect(job_title, "Data Analyst")) %>%
+  mutate(job = "Data Analyst")
+
+# top 10 for each
+data_scientist_top10 <- data_scientist %>%
+  count(skill) %>%
+  arrange(desc(n)) %>%
+  head(n = 10)
+
+data_analyst_top10 <- data_analyst %>%
+  count(skill) %>%
+  arrange(desc(n)) %>%
+  head(n = 10)
+
+common_skills <- as.vector(data_analyst_top10 |> 
+  inner_join(data_scientist_top10, by = 'skill') |> 
+  select(skill))
+
+data_scientist_top10 <-
+  data_scientist_top10 |> mutate(f_color = ifelse(skill %in% c('C++', 'Python', 'Data visualization', 'Statistics'), "Yes", "No"))
+
+data_analyst_top10 <-
+  data_analyst_top10 |> mutate(f_color = ifelse(skill %in% c('C++', 'Python', 'Data visualization', 'Statistics'), "Yes", "No"))
+
+# plot top 10
+data_scientist_top10 %>%
+  ggplot(aes(y = reorder(skill, n), x = n, fill = f_color)) +
+    geom_bar(stat = "identity") +
+    labs(title = "Top 10 Skills for Data Scienctists", x = "Count", y = "Skill") +
+    theme_bw() +
+    theme(legend.position = "none") +
+    scale_fill_manual(values = c("Yes" = "#F28E2B", "No" = "gray"))
+
+data_analyst_top10 %>%
+  ggplot(aes(y = reorder(skill, n), x = n, fill = f_color)) +
+    geom_bar(stat = "identity") +
+    labs(title = "Top 10 Skills for Data Analysts", x = "Count", y = "Skill") +
+    theme_bw() +
+    theme(legend.position = "none") +
+    scale_fill_manual(values = c("Yes" = "#F28E2B", "No" = "gray"))
 ```
 
 ## Title
@@ -289,70 +362,10 @@ The code is generating a stacked bar chart that shows the number of job listings
 
 
 
-**What are the top 10 most important skills for data science?**
-
-```{r }
-job_listings <- read.csv(url("https://raw.githubusercontent.com/ShanaFarber/D607_Project3/main/output/job_listings.csv"), na.strings=c(""))
-  
-skills <- read.csv(url("https://raw.githubusercontent.com/ShanaFarber/D607_Project3/main/output/skills.csv"))
-
-top_10 <- skills %>%
-  count(skill) %>%
-  arrange(desc(n)) %>%
-  head(n = 10)
-
-knitr::kable(top_10, col.names = c("Skills", "Frequency"), format.args = list(big.mark = ","))
-
-top_10 %>%
-  ggplot(aes(y = skill, x = n, fill = skill)) +
-    geom_bar(stat = "identity") +
-    labs(title = "Top 10 Skills for Data Science", x = "Frequency", y = "Skill") +
-    theme(legend.position = "none")
-```
-
-**What are the top skills for Data Scientists vs. Data Analysts?**
-
-```{r fig.show='hold', out.width='50%'}
-# create a full data frame with the skills
-full <- job_listings %>%
-  right_join(skills, by="job_id")
-
-# filter for just data scienctists and analysts
-data_scientist <- full %>% 
-  filter(str_detect(job_title, "Data Scientist")) %>%
-  mutate(job = "Data Scientist")
-  
-data_analyst <- full %>% 
-  filter(str_detect(job_title, "Data Analyst")) %>%
-  mutate(job = "Data Analyst")
-
-# top 10 for each
-data_scientist_top10 <- data_scientist %>%
-  count(skill) %>%
-  arrange(desc(n)) %>%
-  head(n = 10)
-
-data_analyst_top10 <- data_analyst %>%
-  count(skill) %>%
-  arrange(desc(n)) %>%
-  head(n = 10)
-
-# plot top 10
-data_scientist_top10 %>%
-  ggplot(aes(y = skill, x = n, fill = skill)) +
-    geom_bar(stat = "identity") +
-    labs(title = "Top 10 Skills for Data Scienctists", x = "Frequency", y = "Skill") +
-    theme(legend.position = "none")
-
-data_analyst_top10 %>%
-  ggplot(aes(y = skill, x = n, fill = skill)) +
-    geom_bar(stat = "identity") +
-    labs(title = "Top 10 Skills for Data Analysts", x = "Frequency", y = "Skill") +
-    theme(legend.position = "none")
-```
 
 
-## conclusion 
+
+## Conclusion 
 
 The "Master" education level is the most prevalent among different job types, followed by "PhD" and "Bachelor".
 The majority of jobs have a maximum salary value between 0 and 100,000 USD. There are relatively fewer jobs with a maximum salary value between 100,000 and 200,000 USD, and even fewer with a maximum salary value between 200,000 and 300,000 USD. There are only a few jobs with a maximum salary value above 300,000 USD.
