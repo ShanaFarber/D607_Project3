@@ -262,7 +262,7 @@ data_analyst_top10 <-
 data_scientist_top10 %>%
   ggplot(aes(y = reorder(skill, n), x = n, fill = f_color)) +
     geom_bar(stat = "identity") +
-    labs(title = "Top 10 Skills for Data Scienctists", x = "Count") +
+    labs(title = "Top 10 Skills for Data Scienctists", x = "Count", y='') +
     theme_bw() +
     theme(legend.position = "none") +
     scale_fill_manual(values = c("Yes" = "#F28E2B", "No" = "gray")) +
@@ -275,7 +275,7 @@ data_scientist_top10 %>%
 data_analyst_top10 %>%
   ggplot(aes(y = reorder(skill, n), x = n, fill = f_color)) +
     geom_bar(stat = "identity") +
-    labs(title = "Top 10 Skills for Data Analysts", x = "Count") +
+    labs(title = "Top 10 Skills for Data Analysts", x = "Count", y = '') +
     theme_bw() +
     theme(legend.position = "none") +
     scale_fill_manual(values = c("Yes" = "#F28E2B", "No" = "gray")) +
