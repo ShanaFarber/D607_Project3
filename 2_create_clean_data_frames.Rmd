@@ -156,6 +156,8 @@ redundancy_check %>%
 skills_dictionary <- skills_dictionary[!skills_dictionary == "Matlab"]
 
 length(unique(tolower(skills_dictionary))) == length(skills_dictionary)
+
+df_skills <- as.data.frame(skills_dictionary)
 ```
 
 
