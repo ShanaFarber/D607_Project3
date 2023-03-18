@@ -10,9 +10,13 @@ library(tidyverse)
 library(randomForest)
 ```
 
+In this final section, we construct a three models that attempt to use the data we've collected to (i) predict the salary and (ii) find job recommendations for a hypothetical job-seeker. These models are exploratory in nature. We recognize that, with regards to specification, best practices have not been employed and key assumptions have not been assessed. Still, we constructed the following models as proofs of concept on how our data might be used to inform career-related decisions. The final two models (Random Forest and KNN) are used in Shiny apps to explore the interaction between inputs and outputs. These apps can be accessed at the following links.  
+1. https://kac624.shinyapps.io/rf_salary_prediction/  
+2. https://kac624.shinyapps.io/data_science_job_recommender/  
+
 ## Read in Data
 
-We loud in our previously constructed data frames. The `jobs_long` dataframe contains all jobs listings and associated skills. It's in the "long" format, so it cotnains significant duplication. The `job_listing` dataframe contains the same information but without the skills. As a result, there is no duplication, and each row constitutes a single observation (i.e. a single job listing).
+We load in our previously constructed data frames. The `jobs_long` dataframe contains all jobs listings and associated skills. It's in the "long" format, so it contains significant duplication. The `job_listing` dataframe contains the same information but without the skills. As a result, there is no duplication, and each row constitutes a single observation (i.e. a single job listing).
 
 ```{r}
 jobs_long <- read_csv('output/job_listings_skills_long.csv')
@@ -20,7 +24,7 @@ job_listings <- read_csv('output/job_listings_enhanced.csv') %>%
   select(-job_quals, -job_description)
 ```
 
-### Modeling 
+## Simple OLS 
 
 We need to use the is.na() function to check for missing or invalid values in each variable individually
 
@@ -29,7 +33,7 @@ sum(is.na(job_listings$salary_max))
 sum(is.na(job_listings$years_exp))
 ```
 
-Using mean imputation to replace the missing values with the mean value of the corresponding variable
+Using mean imputation to replace the missing values with the mean value of the corresponding variable. We recognize the potential for mean imputation to skew data, but for the sake of exploration and maintaining the volume of data, we choose to impute.
 
 ```{r}
 # Replace missing values in years_exp with the mean value
@@ -69,7 +73,6 @@ ols <- lm(salary_max ~ highest_ed + years_exp + continent, data = job_listings)
 summary(ols)
 ```
 
-
 The model suggests that the predicted salary for an individual with 0 years of experience, no postgraduate education, and working in a remote location in this data set is $83,354.9. Having a master's degree or PhD is associated with higher salaries than having only a bachelor's degree, with master's degree adding $6,684.1 and PhD adding $26,731.7 to the predicted salary. Each additional year of experience is associated with an increase of $2,121.1 in predicted salary. Working in the Americas, Asia, or Oceania regions is associated with higher salaries than working in Europe or in a remote location, with the highest salary predicted for individuals working in the Americas. However, the coefficient for Europe is only marginally significant with a p-value of 0.00443, and the coefficient for working in a remote location is only marginally significant with a p-value of 0.04688.
 
 The adjusted R-squared value of 0.1097 indicates that the predictors explain only about 10.97% of the variation in salary_max, which is relatively low. The p-value of < 2.2e-16 for the F-statistic indicates that the overall model is statistically significant
@@ -92,7 +95,9 @@ scales::comma(predict(ols, test))
 
 ## Random Forest
 
-Dummy encoding
+Random Forest Regression requires numeric data, so categorical variables are one-hot encoded, i.e. converted to binary dummary variables. We also remove variables that won't be used for prediction (job title, currency, website) and focus only on continent for location-related variables. We also convert the skills to a wide, dummy-encoded format, but rather than keep all 300+ skills as columns, we focus only on those skills that are cited more than 1000 times. We take these top ~20 skills as the most important.
+
+We are left with a matrix of all numeric data.
 
 ```{r}
 jobs_skills_matrix <- jobs_long %>%
@@ -112,7 +117,6 @@ jobs_skills_matrix <- jobs_long %>%
          -ed_NA,
          -loc_NA,
          -salary_min)
-  
 
 colnames(jobs_skills_matrix) <- str_replace_all(
   colnames(jobs_skills_matrix),' ', '_')
@@ -120,7 +124,7 @@ colnames(jobs_skills_matrix) <- str_replace_all(
 head(jobs_skills_matrix)
 ```
 
-Baseline Fit
+Typically, random forest models requires iterative hyperparameter tuning to minimize error. For the sake of this exercise, we use the `randomForest` package's default settings and go with the "out-of-the-box" approach.
 
 ```{r}
 rf <- randomForest(salary_max ~ .,
@@ -131,7 +135,7 @@ rf <- randomForest(salary_max ~ .,
 rf
 ```
 
-Visualize (i) feature importance and (ii) squared error as trees increase.
+The predictive ability of the model appears quite limited, evidenced by the relatively low percentage of variance explained by out-of-bag predictions. The two visualizations below explore diagnostics further. We see a few features emerge as the most important, namely the years of experience, location in the Americas, and a couple key skills (machine learning and engineering). In terms of error, we see diminishing returns ~300 trees. Overall, the error appears quite high at ~$40,000, so we'll have to take our final predictions with a grain of salt!
 
 ```{r}
 imp <- as.data.frame(importance(rf))
@@ -149,7 +153,7 @@ data.frame(tree = 1:rf$ntree, rmse = sqrt(rf$mse)) %>%
   geom_line()
 ```
 
-Export to Salary Prediction App
+We export our model and the matrix it used for usage in a Shiny app (saved under `salary_prediction`).
 
 ```{r}
 saveRDS(rf, 'salary_prediction/salary_rf.rds')
@@ -159,15 +163,16 @@ write.csv(jobs_skills_matrix, 'salary_prediction/jobs_skills_matrix.csv', row.na
 
 ## KNN Recommender
 
-TBD
+Our final model will attempt to identify the k-nearest neighbors for a given job listing, meant to serve as recommendations for a hypothetical job seeker. We employ a very simple approach, constructing a matrix of Euclidean distances between listings based on base R's `dist` function. The approach borrows from Ferran Martí's knn example (see https://rpubs.com/ferranmt/80166).
+
+We first calulate the distances, confirm the resuling matrix's dimensions and take a sample of results. We confirm there are zeros along the diagonal, as expected, since the distance between matching jobs should be zero.
 
 ```{r}
-jobs_distances <- as.matrix(dist(jobs_skills_matrix, method="euclidean"))
+jobs_distances <- as.matrix(dist(jobs_skills_matrix, method = 'euclidean'))
 dim(jobs_distances)
 jobs_distances[1:10,1:10]
 ```
-Source
-https://rpubs.com/ferranmt/80166
+Next, we construct a function to identify the k-nearest neighbors. The approach is straightforward. For a given job ID, a row from the above matrix is taken and converted to a dataframe with two columns: job ID and distance. That dataframe is then sorted in ascending order, and the top five job IDs (correlating to the five jobs with the lowest distance) are returned.
 
 ```{r}
 knn <- function(i, distance_matrix, k = 5) {
@@ -179,12 +184,12 @@ knn <- function(i, distance_matrix, k = 5) {
 }
 ```
 
-Test
+Below is a sample of our recommendations will be returned in our final Shiny app. We use a random job from our current dataset as an test case (though in the app, users will enter details about a hypothetical job seeker). That test case is added to the jobs matrix, and (as above) Euclidean distances are calculated. We then feed the row associated with that test case into our previously constructed `knn` function to obtain the IDs for top five matches. We then grab the full details from the job_listings dataframe to present details to our user.
 
 ```{r}
 test <- jobs_skills_matrix[100,]
 new_matrix <- rbind(jobs_skills_matrix, test)
-new_distances <- as.matrix(dist(new_matrix, method="euclidean"))
+new_distances <- as.matrix(dist(new_matrix, method = 'euclidean'))
 last_row_name <- rownames(tail(new_distances,1))
 match_ids <- knn(last_row_name, new_distances, 5)
 match_ids <- match_ids[match_ids != last_row_name]
@@ -193,7 +198,7 @@ match_ids
 job_listings[job_listings$job_id %in% match_ids,]
 ```
 
-Save matrix for use in recommender Shiny app.
+Finally, we save our data for use in the recommender Shiny app!
 
 ```{r}
 write.csv(jobs_skills_matrix, 'job_recommendations/jobs_skills_matrix.csv', row.names = TRUE)

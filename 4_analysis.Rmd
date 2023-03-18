@@ -251,7 +251,6 @@ ggplot(exp5_skill_counts, aes(label = skills, size = counts, color = factor(samp
   geom_text_wordcloud() +
   scale_size_area(max_size = 15) +
   theme_minimal()
-
 ```
 
 The code is creating a word cloud of skills that are required for jobs with 5 or more years of experience. The jobs_long data frame is filtered to keep only the rows where the years_exp column is greater than or equal to 5, and then grouped by the skills column.
@@ -278,7 +277,7 @@ This code generates a word cloud plot of the most frequently cited skills in the
 
 
 # Plot a stacked bar chart of the number of job listings by location and highest education level
-ggplot(import_df, aes(x = highest_ed, fill = location)) +
+ggplot(import_df, aes(x = highest_ed, fill = continent)) +
   geom_bar() +
   labs(title = "Number of job listings by location and highest education level",
        x = "Highest education level", y = "Count") +
