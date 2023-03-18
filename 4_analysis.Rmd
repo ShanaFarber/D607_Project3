@@ -262,57 +262,46 @@ data_analyst_top10 <-
 data_scientist_top10 %>%
   ggplot(aes(y = reorder(skill, n), x = n, fill = f_color)) +
     geom_bar(stat = "identity") +
-    labs(title = "Top 10 Skills for Data Scienctists", x = "Count", y = "Skill") +
+    labs(title = "Top 10 Skills for Data Scienctists", x = "Count") +
     theme_bw() +
     theme(legend.position = "none") +
-    scale_fill_manual(values = c("Yes" = "#F28E2B", "No" = "gray"))
+    scale_fill_manual(values = c("Yes" = "#F28E2B", "No" = "gray")) +
+    geom_text(aes(label = n), 
+            position = position_stack(vjust = 0.9), 
+            size = 3,
+            fontface = 'bold',
+            color = 'black')
 
 data_analyst_top10 %>%
   ggplot(aes(y = reorder(skill, n), x = n, fill = f_color)) +
     geom_bar(stat = "identity") +
-    labs(title = "Top 10 Skills for Data Analysts", x = "Count", y = "Skill") +
+    labs(title = "Top 10 Skills for Data Analysts", x = "Count") +
     theme_bw() +
     theme(legend.position = "none") +
-    scale_fill_manual(values = c("Yes" = "#F28E2B", "No" = "gray"))
+    scale_fill_manual(values = c("Yes" = "#F28E2B", "No" = "gray")) +
+    geom_text(aes(label = n), 
+            position = position_stack(vjust = 0.9), 
+            size = 3,
+            fontface = 'bold',
+            color = 'black')
 ```
 
-## Title
+## Wordclouds
+
+Sort the data by the number of citations in descending order and select the top 50 most cited skills. Create the plot using ggplot2 and ggwordcloud packages
 
 ```{r rename6}
-
-```
-
-## Title
-
-```{r rename7}
-
-```
-
-------------------
-
-Sort the data by the number of citations in descending order and select the top 50 most cited skills
-
-```{r}
 skill_counts <- skill_counts %>%
   arrange(desc(count)) %>%
   head(50)
-
-```
-
-
-
-Create the plot using ggplot2 and ggwordcloud packages
-
-```{r}
 
 ggplot(skill_counts, aes(label = skills, size = count, color = factor(sample.int(8, nrow(skill_counts), replace = TRUE)))) +
   geom_text_wordcloud() +
   scale_size_area(max_size = 10) +
   theme_minimal()
-
 ```
 
-Most frequently counted skills for job listings with at least 5 years of experience
+#### Most frequently counted skills for job listings with at least 5 years of experience
 
 ```{r}
 exp5_skill_counts <- import_df %>%
@@ -327,7 +316,6 @@ ggplot(exp5_skill_counts, aes(label = skills, size = counts, color = factor(samp
 ```
 
 The code is creating a word cloud of skills that are required for jobs with 5 or more years of experience. The jobs_long data frame is filtered to keep only the rows where the years_exp column is greater than or equal to 5, and then grouped by the skills column.
-
 
 ```{r}
 
@@ -344,26 +332,18 @@ ggplot(skills_freq, aes(label = skills, size = n)) +
 ```
 This code generates a word cloud plot of the most frequently cited skills in the jobs_long dataset. It first creates a new dataframe called skills_freq that counts the frequency of each skill in the skills column of jobs_long, arranges them in descending order, and selects the top 100. It then uses ggplot and geom_text_wordcloud to plot the skill names as words, with the size of the word indicating the frequency of the skill. The plot is given a title "Most frequently cited skills
 
+## Location and Education
 
+The code is generating a stacked bar chart that shows the number of job listings for each combination of location and highest education level. The x-axis represents the highest education level and the bars are stacked by location. 
 
-```{r}
-
-
+```{r loc-edu}
 # Plot a stacked bar chart of the number of job listings by location and highest education level
 ggplot(import_df, aes(x = highest_ed, fill = continent)) +
   geom_bar() +
   labs(title = "Number of job listings by location and highest education level",
        x = "Highest education level", y = "Count") +
   theme(legend.position = "bottom")
-
 ```
-
-The code is generating a stacked bar chart that shows the number of job listings for each combination of location and highest education level. The x-axis represents the highest education level and the bars are stacked by location. 
-
-
-
-
-
 
 ## Conclusion 
 
@@ -372,3 +352,4 @@ The majority of jobs have a maximum salary value between 0 and 100,000 USD. Ther
 There are differences in the distribution of years of experience across different job positions and education levels. For example, among individuals with a Bachelor's degree, the distribution of years of experience appears to be skewed towards the lower end, suggesting that many individuals in these positions have relatively little experience. On the other hand, among individuals with a PhD, the distribution of years of experience appears to be more evenly spread out, suggesting that individuals with a PhD may have more varied levels of experience.
 The most frequently cited skills in the job listings are "Python", "SQL", and "Machine Learning". The top skills cited in the job listings vary depending on the highest education level required and the job location.
 
+------------------
