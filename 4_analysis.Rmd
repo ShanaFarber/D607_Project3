@@ -40,7 +40,7 @@ knitr::kable(distinct_job_website)
 
 ## Most Requested Degree
 
-Based on the job postings that had college degree information, having a Master's was first at 498, followed by a Bachelor's at 457. 
+Based on the job postings that had college degree information, having a Master's was first at 496, followed by a Bachelor's at 456. 
 
 ```{r college-degree}
 high_degree <- 
@@ -67,7 +67,7 @@ knitr::kable(high_degree)
 
 ## Maximum Salary Distribution
 
-The histogram shows the distribution of maximum salary values for all jobs within the dataset, with missing values removed. We can see that there is a bi-modal distribution where it peaks first at \$125,000 with 1,365 jobs and again at \$175,000 with 986 jobs. 
+The histogram shows the distribution of maximum salary values for all jobs within the dataset, with missing values removed. We can see that there is a bi-modal distribution where it peaks first at \$125,000 and again at \$175,000. 
 
 ```{r salary}
 salaries <- 
@@ -171,84 +171,57 @@ edu_exp |> ggplot(aes(exp_bins)) +
   scale_fill_brewer(palette = 'Set1')
 ```
 
+## Top 20 Most Frequently Cited Skills
+
+```{r top20-all}
+skill_counts <- import_df %>%
+  group_by(skills) %>%
+  summarize(count = n(), .groups = 'keep') |> 
+  filter(!skills %in% c('engineering', 'data science', 'research', 'programming')) |> 
+  arrange(desc(count))
+
+skill_counts |> 
+  head(20) |> 
+  ggplot(aes(x = count, y = reorder(skills, count))) +
+  geom_bar(stat = 'identity', fill = '#4E79A7') +
+    labs(title = "Top 20 Most Frequently Cited Skills", x = '', y = '') +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(),
+        axis.text = element_text(face = 'bold')) +
+  geom_text(aes(label = count), 
+            position = position_stack(vjust = 0.9), 
+            size = 3,
+            fontface = 'bold',
+            color = 'white')
+
+knitr::kable(skill_counts |> head(20))
+```
+
 ## Title
 
-```{r rename4}
-explore <- read_csv('output/job_listings.csv')
-explore |> 
-  group_by(website) |> 
-  summarise(count = n())
+```{r rename5}
+
 ```
 
+## Title
 
+```{r rename6}
 
+```
 
+## Title
 
+```{r rename7}
 
+```
 
 ------------------
-
-
-
-##### Most Frequently Cited Skills
-
-```{r}
-jobs_long %>%
-  group_by(skills) %>%
-  summarize(citations = n(), .groups = 'keep') %>%
-  arrange(desc(citations)) %>%
-  head(20)
-
-for (ed_level in unique(jobs_long$highest_ed)) {
-  jobs_long %>%
-    filter(highest_ed == ed_level) %>%
-    group_by(skills) %>%
-    summarize(citations = n(),
-              ed_level = ed_level,
-              .groups = 'keep') %>%
-    arrange(desc(citations)) %>%
-    head(10) %>%
-    print()
-}
-
-for (loc in c('New York', 'Remote', 'France')) {
-  jobs_long %>%
-    filter(location == loc) %>%
-    group_by(skills) %>%
-    summarize(citations = n(),
-              location = loc,
-              .groups = 'keep') %>%
-    arrange(desc(citations)) %>%
-    head(10) %>%
-    print()
-}
-```
-
-
-Group the data by the skills column and count the number of counts for each skill:
-
-```{r}
-skill_counts <- jobs_long %>%
-  group_by(skills) %>%
-  summarize(counts = n(), .groups = 'keep')
-
-```
-
-
-Filter out any skills that you don't want to include in the plot
-
-```{r}
-overweighted <- c("data", "analyst", "analysis", "analytics","big data","business analytics", "data")
-skill_counts <- skill_counts[!grepl(paste(overweighted, collapse="|"), skill_counts$skills), ]
-
-```
-
 
 Sort the data by the number of citations in descending order and select the top 50 most cited skills
 
 ```{r}
 skill_counts <- skill_counts %>%
-  arrange(desc(counts)) %>%
+  arrange(desc(count)) %>%
   head(50)
 
 ```
@@ -258,10 +231,8 @@ skill_counts <- skill_counts %>%
 Create the plot using ggplot2 and ggwordcloud packages
 
 ```{r}
-library(ggplot2)
-library(ggwordcloud)
 
-ggplot(skill_counts, aes(label = skills, size = counts, color = factor(sample.int(8, nrow(skill_counts), replace = TRUE)))) +
+ggplot(skill_counts, aes(label = skills, size = count, color = factor(sample.int(8, nrow(skill_counts), replace = TRUE)))) +
   geom_text_wordcloud() +
   scale_size_area(max_size = 10) +
   theme_minimal()
@@ -271,7 +242,7 @@ ggplot(skill_counts, aes(label = skills, size = counts, color = factor(sample.in
 Most frequently counted skills for job listings with at least 5 years of experience
 
 ```{r}
-exp5_skill_counts <- jobs_long %>%
+exp5_skill_counts <- import_df %>%
   filter(years_exp >= 5) %>%
   group_by(skills) %>%
   summarize(counts = n(), .groups = 'keep')
@@ -289,7 +260,7 @@ The code is creating a word cloud of skills that are required for jobs with 5 or
 ```{r}
 
 # Plot a word cloud of the most frequently cited skills
-skills_freq <- jobs_long %>%
+skills_freq <- import_df %>%
   count(skills) %>%
   arrange(desc(n)) %>%
   head(100)
@@ -302,37 +273,12 @@ ggplot(skills_freq, aes(label = skills, size = n)) +
 This code generates a word cloud plot of the most frequently cited skills in the jobs_long dataset. It first creates a new dataframe called skills_freq that counts the frequency of each skill in the skills column of jobs_long, arranges them in descending order, and selects the top 100. It then uses ggplot and geom_text_wordcloud to plot the skill names as words, with the size of the word indicating the frequency of the skill. The plot is given a title "Most frequently cited skills
 
 
-##### Number of job listings per website
-
-```{r}
-
-distinct_job_website <- 
-  jobs_long |> 
-  group_by(website) |> 
-  summarise(count = n_distinct(job_id))
-
-# Plot a bar chart of the number of job listings per website
-ggplot(distinct_job_website, aes(x = website, y = count)) +
-  geom_bar(fill = "steelblue", stat = 'identity') +
-  coord_flip() +
-  labs(title = "Number of job listings per website",
-       x = "Website", y = "Count")
-```
-
-# Resample 
-```{r}
-
-jobs_long |> 
-  filter(is.na(location)) |> 
-  group_by(website) |> 
-  summarise(count = n_distinct(job_id))
-```
 
 ```{r}
 
 
 # Plot a stacked bar chart of the number of job listings by location and highest education level
-ggplot(jobs_long, aes(x = highest_ed, fill = location)) +
+ggplot(import_df, aes(x = highest_ed, fill = location)) +
   geom_bar() +
   labs(title = "Number of job listings by location and highest education level",
        x = "Highest education level", y = "Count") +
@@ -346,7 +292,7 @@ The code is generating a stacked bar chart that shows the number of job listings
 
 **What are the top 10 most important skills for data science?**
 
-```{r}
+```{r }
 job_listings <- read.csv(url("https://raw.githubusercontent.com/ShanaFarber/D607_Project3/main/output/job_listings.csv"), na.strings=c(""))
   
 skills <- read.csv(url("https://raw.githubusercontent.com/ShanaFarber/D607_Project3/main/output/skills.csv"))
