@@ -207,7 +207,7 @@ knitr::kable(skill_counts |> head(20))
 ## What are the top 10 most important skills for data science?
 
 ```{r top10-ds}
-top_10 <- job_listings_skills_long %>%
+top_10 <- import_df %>%
   count(skill) %>%
   arrange(desc(n)) %>%
   head(n = 10)
@@ -227,11 +227,11 @@ The highlighted bars shows the overlap in skills between both job titles.
 
 ```{r top-ds-da, fig.show='hold', out.width='50%', warning=FALSE, message=FALSE}
 # filter for just data scientists and analysts
-data_scientist <- job_listings_skills_long %>% 
+data_scientist <- import_df %>% 
   filter(str_detect(job_title, "data scientist")) %>%
   mutate(job = "Data Scientist")
   
-data_analyst <- job_listings_skills_long %>% 
+data_analyst <- import_df %>% 
   filter(str_detect(job_title, "data analyst")) %>%
   mutate(job = "Data Analyst")
 
