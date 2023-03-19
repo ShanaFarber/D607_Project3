@@ -108,7 +108,7 @@ job_listings_skills <- job_listings_enhanced %>%
 # removes redundancies
 job_listings_skills_long <- job_listings_skills %>%
   unnest_longer(col = skills, values_to = 'search_word', indices_include = FALSE) %>%
-  right_join(skills, on = "search_word") %>%
+  right_join(skills, by = "search_word") %>%
   select(-search_word) %>%
   filter(!is.na(website)) %>%
   unique()

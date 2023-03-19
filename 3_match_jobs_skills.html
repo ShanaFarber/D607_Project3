@@ -11,7 +11,7 @@
 
 <meta name="author" content="Keith Colella" />
 
-<meta name="date" content="2023-03-17" />
+<meta name="date" content="2023-03-19" />
 
 <title>DATA 607 - Project 3 - Matching jobs and skills</title>
 
@@ -577,7 +577,7 @@ display: none;
 <h1 class="title toc-ignore">DATA 607 - Project 3 - Matching jobs and
 skills</h1>
 <h4 class="author">Keith Colella</h4>
-<h4 class="date">2023-03-17</h4>
+<h4 class="date">2023-03-19</h4>
 
 </div>
 
@@ -608,7 +608,7 @@ listing was extracted, along with the max requested years of experience.
 A temporary “combo” field was created so that both job descriptions and
 qualifications fields could be easily reanalyzed. Also, the salary data
 was standardized into a common currency, USD.</p>
-<pre class="r"><code>job_listings &lt;- job_listings %&gt;%
+<pre class="r"><code>job_listings_enhanced &lt;- job_listings %&gt;%
   mutate(job_title = tolower(job_title) %&gt;%
            str_replace_all(&#39;[â¢\u0080-\uFFFF]&#39;, &#39;&#39;),
          
@@ -667,14 +667,22 @@ was standardized into a common currency, USD.</p>
 fields were extracted. These skills are first extracted into a
 list-column, with each row containing a list of unique skills mentioned
 in the job details. Then they are unnested to create another long-form
-dataframe to facilitate further analysis.</p>
-<pre class="r"><code>skills_unique &lt;- unique(tolower(skills$skill))
-skill_regex_pattern &lt;- paste0(&quot;\\b&quot;, 
-                              paste(skills_unique, collapse=&quot;\\b|\\b&quot;),
-                              &quot;\\b&quot;)
+dataframe to facilitate further analysis. This dataframe was joined to
+the initial skills dataframe by the <code>serch_word</code> to get all
+of the listed skills with proper capitalization. There was one job
+listing that was removed, as it was listed in German and there were no
+skills extracted due to the difference in language.</p>
+<pre class="r"><code>skills_clean &lt;- skills$search_word %&gt;%
+  sort(decreasing = TRUE)
 
+skill_regex_pattern &lt;- paste0(&#39;\\b&#39;, paste(skills_clean, collapse = &#39;\\b|\\b&#39;), &#39;\\b&#39;) %&gt;%
+  str_replace_all(&#39;c\\+\\+\\\\b&#39;,&#39;c\\\\\\+\\\\\\+\\(\\?\\= \\)&#39;) %&gt;%
+  str_replace_all(&#39;c#\\\\b&#39;,&#39;c\\\\\\#\\(\\?\\= \\)&#39;) %&gt;%
+  str_replace_all(&#39;visual\\\\b&#39;, &#39;\\\\bvisual&#39;) %&gt;%
+  str_replace_all(&#39;collabor\\\\b&#39;, &#39;\\\\bcollabor&#39;) %&gt;%
+  str_replace_all(&#39;communicat\\\\b&#39;, &#39;\\\\bcommunicat&#39;)
 
-job_listings_skills &lt;- job_listings %&gt;%
+job_listings_skills &lt;- job_listings_enhanced %&gt;%
   mutate(combo_details = str_c(job_quals, job_description),
          skills = str_extract_all(combo_details, skill_regex_pattern)) %&gt;%
   select(-combo_details, -job_quals, -job_description) %&gt;%
@@ -682,8 +690,26 @@ job_listings_skills &lt;- job_listings %&gt;%
   mutate(skills = list(unique(skills))) %&gt;%
   ungroup()
 
+# combines the skills with the proper capitalization
+# removes redundancies
 job_listings_skills_long &lt;- job_listings_skills %&gt;%
-  unnest_longer(col = skills, values_to = &#39;skills&#39;, indices_include = FALSE)
+  unnest_longer(col = skills, values_to = &#39;search_word&#39;, indices_include = FALSE) %&gt;%
+  right_join(skills, by = &quot;search_word&quot;) %&gt;%
+  select(-search_word) %&gt;%
+  filter(!is.na(website)) %&gt;%
+  unique()
+
+job_id_and_skills &lt;- job_listings_skills_long %&gt;%
+  group_by(job_id) %&gt;%
+  mutate(skills = list(skill)) %&gt;%
+  transmute(job_id, skills) %&gt;%
+  unique()
+
+# removing German job listing - no skills extracted 
+# adding skills string with proper capitalization 
+job_listings_skills &lt;- job_listings_skills %&gt;%
+  filter(job_id %in% job_id_and_skills$job_id) %&gt;%
+  mutate(skills = job_id_and_skills$skills)
 
 job_listings_skills_string &lt;- job_listings_skills %&gt;%
   rowwise() %&gt;% 
@@ -709,7 +735,7 @@ extraction to occur.</p>
                        &quot;Data analysis&quot; = &quot;(Data analysis|analyze data)&quot;, 
                        &quot;Communication&quot; = &quot;(Communication|communicate)&quot;, 
                        &quot;Collaboration&quot; = &quot;(Collaboration|collaborate|collaborative)&quot;, 
-                       &quot;C&quot; = &quot;(\\s|\\\\)C(\\s|,|\\\\)&quot;, &quot;C\\+\\+&quot; = &quot;C\\+\\+&quot;)
+                       &quot;C&quot; = &quot;(\\s|\\\\)C(\\s|,|\\\\)&quot;, &quot;C\\+\\+&quot; = &quot;C\\\\+\\\\+&quot;)
 
   for(i in 1:length(job_df$job_id)) {
     job_id &lt;- job_df$job_id[i]
@@ -796,7 +822,7 @@ continent
 country
 </th>
 <th style="text-align:left;">
-skills
+skill
 </th>
 </tr>
 </thead>
@@ -836,7 +862,7 @@ NA
 NA
 </td>
 <td style="text-align:left;">
-a/b testing
+A/B testing
 </td>
 </tr>
 <tr>
@@ -874,7 +900,7 @@ NA
 NA
 </td>
 <td style="text-align:left;">
-data analytics
+Data Analytics
 </td>
 </tr>
 <tr>
@@ -912,7 +938,7 @@ NA
 NA
 </td>
 <td style="text-align:left;">
-data studio
+Data Studio
 </td>
 </tr>
 <tr>
@@ -950,7 +976,7 @@ NA
 NA
 </td>
 <td style="text-align:left;">
-data warehouse
+Data warehouse
 </td>
 </tr>
 <tr>
@@ -988,7 +1014,7 @@ NA
 NA
 </td>
 <td style="text-align:left;">
-engineering
+Engineering
 </td>
 </tr>
 </tbody>
@@ -996,9 +1022,9 @@ engineering
 </div>
 </div>
 <div id="save-the-dataframes-as-csv" class="section level2">
-<h2>Save the dataframes as csv</h2>
-<p>The two dataframes were written to csv files.</p>
-<pre class="r"><code>write.csv(job_listings, &quot;output/job_listings_enhanced.csv&quot;, row.names = FALSE)
+<h2>Save the Dataframes as CSV</h2>
+<p>The dataframes were written to csv files.</p>
+<pre class="r"><code>write.csv(job_listings_enhanced, &quot;output/job_listings_enhanced.csv&quot;, row.names = FALSE)
 write.csv(job_listings_skills_long, &quot;output/job_listings_skills_long.csv&quot;, row.names = FALSE)
 write.csv(job_listings_skills_string, &quot;output/job_listings_skills_string.csv&quot;, row.names = FALSE)
 write.csv(job_listings_skills_string, &quot;job_recommendations/job_listings_skills_string.csv&quot;, row.names = FALSE)</code></pre>

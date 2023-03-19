@@ -372,7 +372,7 @@ dataframe to save a dictionary of skills for later use.</p>
 <div id="loading-the-data" class="section level2">
 <h2>Loading the Data</h2>
 <p>The first step was to load the data. Each of the data sources was
-obtained by web scraping from job boards which allow wweb scraping (USA
+obtained by web scraping from job boards which allow web scraping (USA
 jobs, AI jobs, dataanalyst.com) or downloading the job listings directly
 (NYC jobs). The scraping of each job board was done using python and a
 csv file was created for each and uploaded to our github repository so
@@ -507,6 +507,7 @@ skills_dictionary &lt;- skills_dictionary[!skills_dictionary == &quot;Matlab&quo
 
 length(unique(tolower(skills_dictionary))) == length(skills_dictionary)</code></pre>
 <pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>df_skills &lt;- as.data.frame(skills_dictionary)</code></pre>
 </div>
 <div id="usa-jobs" class="section level3">
 <h3>USA Jobs</h3>
@@ -587,8 +588,8 @@ series of number or letters afterward.</p>
 data_analyst_jobs %&gt;%
   count(job_country)</code></pre>
 <pre><code>##      job_country   n
-## 1 United Kingdom 103
-## 2  United States 597</code></pre>
+## 1 United Kingdom 101
+## 2  United States 599</code></pre>
 <pre class="r"><code># str_view(data_analyst_jobs$job_url, &quot;\\w+-.+&quot;)
 
 # clean the data frame
@@ -620,12 +621,30 @@ length(unique(data_analyst_jobs_cleaned$job_id)) == length(data_analyst_jobs_cle
 <p>To create a full data frame of all the job listing the jobs data sets
 were merged into <code>job_listings</code> and a dataframe with the
 skills was also created, <code>skills</code>.</p>
-<pre class="r"><code>job_listings &lt;- ai_jobs_cleaned %&gt;%
+<pre class="r"><code>#join listings data frames and eliminate redundancies
+job_listings &lt;- ai_jobs_cleaned %&gt;%
   rbind(usa_jobs_cleaned) %&gt;%
   rbind(nyc_jobs_cleaned) %&gt;%
-  rbind(data_analyst_jobs_cleaned)
+  rbind(data_analyst_jobs_cleaned) %&gt;%
+  unique()
 
 skills &lt;- data.frame(skill = skills_dictionary)</code></pre>
+<p>In order to account for looser terminology in certain cases, (ex.
+“Data visualization” as “visual”), the skills dictionary was amended to
+have the listed skill, as well as the search term. The search term in
+all cases was converted to lowercase for the comparison.</p>
+<pre class="r"><code>skills &lt;- skills %&gt;%
+  mutate(&quot;search_word&quot; = tolower(skill),
+         search_word = replace(search_word, search_word == &quot;data visualization&quot;, &quot;visual&quot;),
+         search_word = replace(search_word, search_word == &quot;collaboration&quot;, &quot;collabor&quot;),
+         search_word = replace(search_word, search_word == &quot;communcation&quot;, &quot;communicat&quot;))
+
+skills[nrow(skills)+1,] &lt;- c(&quot;Data analysis&quot;, &quot;analyze data&quot;)
+
+skills$search_word &lt;- skills$search_word %&gt;%
+  str_replace_all(&#39;[â¢\u0080-\uFFFF]&#39;, &#39;&#39;) %&gt;%
+  str_replace_all(&#39;[‘’“”\\,\\.\\(\\)\\;\\:\&#39;\\?]&#39;,&#39;&#39;) %&gt;%
+  str_replace_all(&#39;[-]&#39;, &#39; &#39;)</code></pre>
 <p>Separate CSV files for each data frame were created to be analyzed
 later.</p>
 <pre class="r"><code>write.csv(job_listings, &quot;output/job_listings.csv&quot;, row.names=F)
