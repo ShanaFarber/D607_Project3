@@ -13,6 +13,10 @@ library(ggplot2)
 library(ggwordcloud)
 ```
 
+## Introduction.
+
+This work is the fourth of five stages of an analysis where the main objective was to identify the most valued data science skills. Our approach to this was to collect job postings from various job boards and extract the skills from the postings. The purpose of this specific file's work is to analyze the skills extracted from the job postings.  
+
 ## Read in data
 
 Read the data from a CSV file which contains job listings and skills
