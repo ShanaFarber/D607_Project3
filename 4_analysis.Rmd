@@ -5,7 +5,9 @@ date: "3-16-2022"
 output: html_document
 ---
 
-```{r setup, message=FALSE}
+```{r setup, include = F}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+
 library(tidyverse)
 library(ggplot2)
 library(ggwordcloud)
@@ -176,14 +178,14 @@ edu_exp |> ggplot(aes(exp_bins)) +
 
 ```{r top20-all}
 skill_counts <- import_df %>%
-  group_by(skills) %>%
+  group_by(skill) %>%
   summarize(count = n(), .groups = 'keep') |> 
-  filter(!skills %in% c('engineering', 'data science', 'research', 'programming')) |> 
+  filter(!skill %in% c('engineering', 'data science', 'research', 'programming')) |> 
   arrange(desc(count))
 
 skill_counts |> 
   head(20) |> 
-  ggplot(aes(x = count, y = reorder(skills, count))) +
+  ggplot(aes(x = count, y = reorder(skill, count))) +
   geom_bar(stat = 'identity', fill = '#4E79A7') +
     labs(title = "Top 20 Most Frequently Cited Skills", x = '', y = '') +
   theme_bw() +
@@ -201,11 +203,7 @@ knitr::kable(skill_counts |> head(20))
 ## What are the top 10 most important skills for data science?
 
 ```{r top10-ds}
-job_listings <- read.csv(url("https://raw.githubusercontent.com/ShanaFarber/D607_Project3/main/output/job_listings.csv"), na.strings=c(""))
-  
-skills <- read.csv(url("https://raw.githubusercontent.com/ShanaFarber/D607_Project3/main/output/skills.csv"))
-
-top_10 <- skills %>%
+top_10 <- job_listings_skills_long %>%
   count(skill) %>%
   arrange(desc(n)) %>%
   head(n = 10)
@@ -224,17 +222,13 @@ top_10 %>%
 The highlighted bars shows the overlap in skills between both job titles. 
 
 ```{r top-ds-da, fig.show='hold', out.width='50%', warning=FALSE, message=FALSE}
-# create a full data frame with the skills
-full <- job_listings %>%
-  left_join(skills, by="job_id")
-
 # filter for just data scientists and analysts
-data_scientist <- full %>% 
-  filter(str_detect(job_title, "Data Scientist")) %>%
+data_scientist <- job_listings_skills_long %>% 
+  filter(str_detect(job_title, "data scientist")) %>%
   mutate(job = "Data Scientist")
   
-data_analyst <- full %>% 
-  filter(str_detect(job_title, "Data Analyst")) %>%
+data_analyst <- job_listings_skills_long %>% 
+  filter(str_detect(job_title, "data analyst")) %>%
   mutate(job = "Data Analyst")
 
 # top 10 for each
@@ -295,7 +289,7 @@ skill_counts <- skill_counts %>%
   arrange(desc(count)) %>%
   head(50)
 
-ggplot(skill_counts, aes(label = skills, size = count, color = factor(sample.int(8, nrow(skill_counts), replace = TRUE)))) +
+ggplot(skill_counts, aes(label = skill, size = count, color = factor(sample.int(8, nrow(skill_counts), replace = TRUE)))) +
   geom_text_wordcloud() +
   scale_size_area(max_size = 10) +
   theme_minimal()
@@ -306,30 +300,31 @@ ggplot(skill_counts, aes(label = skills, size = count, color = factor(sample.int
 ```{r}
 exp5_skill_counts <- import_df %>%
   filter(years_exp >= 5) %>%
-  group_by(skills) %>%
+  group_by(skill) %>%
   summarize(counts = n(), .groups = 'keep')
 
-ggplot(exp5_skill_counts, aes(label = skills, size = counts, color = factor(sample.int(8, nrow(exp5_skill_counts), replace = TRUE)))) +
+ggplot(exp5_skill_counts, aes(label = skill, size = counts, color = factor(sample.int(8, nrow(exp5_skill_counts), replace = TRUE)))) +
   geom_text_wordcloud() +
-  scale_size_area(max_size = 15) +
+  scale_size_area(max_size = 10) +
   theme_minimal()
 ```
 
 The code is creating a word cloud of skills that are required for jobs with 5 or more years of experience. The jobs_long data frame is filtered to keep only the rows where the years_exp column is greater than or equal to 5, and then grouped by the skills column.
 
 ```{r}
-
 # Plot a word cloud of the most frequently cited skills
 skills_freq <- import_df %>%
-  count(skills) %>%
+  count(skill) %>%
   arrange(desc(n)) %>%
   head(100)
-ggplot(skills_freq, aes(label = skills, size = n)) +
+
+ggplot(skills_freq, aes(label = skill, size = n, color = factor(sample.int(8, nrow(skills_freq), replace = TRUE)))) +
   geom_text_wordcloud() +
   theme_minimal() +
+  scale_size_area(max_size = 10) +
   labs(title = "Most frequently cited skills")
-
 ```
+
 This code generates a word cloud plot of the most frequently cited skills in the jobs_long dataset. It first creates a new dataframe called skills_freq that counts the frequency of each skill in the skills column of jobs_long, arranges them in descending order, and selects the top 100. It then uses ggplot and geom_text_wordcloud to plot the skill names as words, with the size of the word indicating the frequency of the skill. The plot is given a title "Most frequently cited skills
 
 ## Location and Education

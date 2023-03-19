@@ -1,448 +1,448 @@
-skill
-A/B testing
-Data Analytics
-Data Studio
-Data warehouse
-Engineering
-Looker
-Metabase
-PostgreSQL
-Python
-Redash
-SQL
-Superset
-Tableau
-Chatbots
-ChatGPT
-GPT
-Research
-AI content
-Anyword
-Marketmuse
-Wordtune
-AI video
-Pictory
-AI art
-DALL-E
-Midjourney
-Stable Diffusion
-Copywriting
-Prompt writing
-UX
-Clojure
-Computer Science
-Data visualization
-Deep Learning
-E-commerce
-GPU
-Linear algebra
-Machine Learning
-Mathematics
-ML models
-PyTorch
-Statistics
-TensorFlow
-Architecture
-GitHub
-HPC
-LLMs
-Model inference
-NLP
-Privacy
-Security
-Transformers
-Biochemistry
-Biology
-Chemistry
-Teaching
-Economics
-Finance
-PhD
-Physics
-Testing
-Trading Strategies
-Scikit-learn
-Business Analytics
-Classification
-Data management
-PHP
-Industrial
-Airflow
-API Development
-APIs
-AWS
-Big Data
-Data pipelines
-ETL
-Hadoop
-NoSQL
-Pipelines
-Scala
-Spark
-Business Intelligence
-Elasticsearch
-Open Source
-SageMaker
-Streaming
-Agile
-Azure
-BigQuery
-CI/CD
-GCP
-Git
-Kafka
-Kubernetes
-Redshift
-Consulting
-Google Cloud
-R
-R&D
-Data Mining
-Data quality
-DevOps
-GitLab
-Unstructured data
-Data analysis
-Pandas
-Power BI
-Flink
-Linux
-Scrum
-Grafana
-Prototyping
-Informatica
-Qlik
-Talend
-Kanban
-Snowflake
-Blockchain
-Crypto
-Neo4j
-QlikView
-SAS
-Genetics
-GANs
-Keras
-Kubeflow
-MLFlow
-MLOps
-Semantic Analysis
-Avro
-Dataflow
-Docker
-DynamoDB
-Flask
-Kinesis
-LightGBM
-MySQL
-Terraform
-XGBoost
-Dataproc
-OOP
-XSD
-Bitbucket
-Lambda
-Microservices
-MongoDB
-STEM
-Amplitude
-Excel
-ELT
-Databricks
-Predictive Maintenance
-Distributed Systems
-MPP
-Predictive modeling
-QuickSight
-FinTech
-Data governance
-Data strategy
-Jira
-ANN
-C++
-Robotics
-Nonprofit
-Splunk
-Jupyter
-NumPy
-Plotly
-Statistical modeling
-Banking
-DataOps
-Data Warehousing
-RDBMS
-Consulting firm
-Market research
-Angular
-Node.js
-React
-Causal inference
-CSV
-JSON
-XML
-LookML
-MS SQL
-T-SQL
-Oracle
-RPA
-SSIS
-Travel
-ITIL
-KPIs
-Pentaho
-Clustering
-Shell scripting
-ML infrastructure
-Athena
-FiveTran
-OLAP
-TDD
-Ansible
-Cassandra
-HBase
-Julia
-DB2
-HDFS
-Map Reduce
-Maven
-Spotfire
-Ruby
-Perl
-JavaScript
-RapidMiner
-Autonomous Driving
-Caffe
-Computer Vision
-CUDA
-MXNet
-OpenCV
-Theano
-Teradata
-Conversational AI
-NLTK
-EDA
-Kibana
-Logstash
-TensorRT
-Drug discovery
-Pulsar
-Golang
-VR
-Healthcare technology
-PySpark
-.NET
-Model training
-Recommender systems
-KNIME
-Content creation
-SharePoint
-EC2
-Diffusion models
-ICLR
-ICML
-NeurIPS
-Cluster analysis
-RNN
-REST API
-Matillion
-Feature engineering
-SDLC
-OpenStack
-TypeScript
-Radar
-Lidar
-Drones
-Econometrics
-statsmodels
-D3
-Matplotlib
-ElasticNet
-Dagster
-Helm
-Oozie
-Model deployment
-Model design
-Trifacta
-MariaDB
-Parquet
-Bayesian
-ECS
-Quantum algorithms
-RabbitMQ
-Monte Carlo
-CX
-Django
-fastai
-Horovod
-Lua
-Markov Chain
-AI governance
-spaCy
-OKR
-Rust
-ELK
-RDKit
-Weights & Biases
-SciPy
-Credit risk
-ES6
-AGI
-OpenAI
-Topic modeling
-Generative modeling
-ASIC Design
-Fraud risk
-Bigtable
-BERT
-UX Research
-GPT-3
-MVPs
-Cybernetics
-GraphQL
-OCR
-Haskell
-Machine intelligence
-NLG
-HuggingFace
-SLAM
-Visual SLAM
-Minitab
-Seaborn
-Vue
-CAD
-ASR
-Probability theory
-DataRobot
-ISO 27001
-Periscope
-Nvidia Jetson
-Clinical NLP
-RDF
-Anaconda
-Postdoc
-AI strategy
-JMLR
-Speech synthesis
-Circuit Design
-Human Machine Interaction
-Azkaban
-ONNX
-Firehose
-Survey data
-Protein engineering
-Mendelian Randomization
-ggplot2
-Elixir
-HiveSQL
-SparkML
-EMNLP
-TOGAF
-CockroachDB
-DDL
-XLNet
-HiveQL
-3D Reconstruction
-3D graphics
-Autoregressive models
-Sports industry
-Accounting concepts
-Driver’s license
-Weka
-GPT-2
-Airtable
-StyleGAN
-Aggregation
-Agile methodologies
-AngularJS
-API
-Automation
-Batch normalization
-Bioinformatics
-Biomedical Engineering
-Bokeh
-Bootstrapping
-Business acumen
-C#
-C
-Calculus
-Cloud computing
-Collaboration
-Command line
-Communicare
-Communication
-Creativity
-Critical thinking
-Cross validation
-CSS
-Curiosity
-Cybersecurity
-Data cleaning
-Data collection
-Data communication
-Data driven decision making
-Data engineering
-Data integration
-Data literacy
-Data modeling
-Data preprocessing
-Data processing 
-Data science
-Data security
-Data storage
-Data structure
-Data validation
-Data wrangling
-Database knowledge
-Database management
-Decision forest
-Decision trees
-Dimensionality reduction
-Distributed computing
-Ensemble methods
-Experiment design
-Feature selection
-FedScope
-Git version control
-Google Analytics
-Google Sheets
-Google Tag Manager
-Gradient boosting
-Hierarchical clustering
-HTML
-Hypothesis testing
-js
-Leadership
-Linear regression
-Logistic regression
-Machine learning algorithms
-MATLAB
-Microsoft Office
-Microsoft SQL Server
-Model evaluation
-Model interpretation
-Model tuning
-Naive Bayes
-Natural Language Processing 
-Neural network
-Optimization
-Oracle Database
-Predictive analytics
-Problem solving 
-Programming
-Project management
-Random forests
-Reinforcement learning
-Risk modeling
-Sampling
-Scripting
-Software developement life cycle
-SPSS
-Statistical analysis
-Storytelling
-Supervised learning
-Support vector machines 
-Teamwork
-Time series analysis
-Unix
-Unsupervised learning
-Web developement
+"skill","search_word"
+"A/B testing","a/b testing"
+"Data Analytics","data analytics"
+"Data Studio","data studio"
+"Data warehouse","data warehouse"
+"Engineering","engineering"
+"Looker","looker"
+"Metabase","metabase"
+"PostgreSQL","postgresql"
+"Python","python"
+"Redash","redash"
+"SQL","sql"
+"Superset","superset"
+"Tableau","tableau"
+"Chatbots","chatbots"
+"ChatGPT","chatgpt"
+"GPT","gpt"
+"Research","research"
+"AI content","ai content"
+"Anyword","anyword"
+"Marketmuse","marketmuse"
+"Wordtune","wordtune"
+"AI video","ai video"
+"Pictory","pictory"
+"AI art","ai art"
+"DALL-E","dall-e"
+"Midjourney","midjourney"
+"Stable Diffusion","stable diffusion"
+"Copywriting","copywriting"
+"Prompt writing","prompt writing"
+"UX","ux"
+"Clojure","clojure"
+"Computer Science","computer science"
+"Data visualization","visual"
+"Deep Learning","deep learning"
+"E-commerce","e-commerce"
+"GPU","gpu"
+"Linear algebra","linear algebra"
+"Machine Learning","machine learning"
+"Mathematics","mathematics"
+"ML models","ml models"
+"PyTorch","pytorch"
+"Statistics","statistics"
+"TensorFlow","tensorflow"
+"Architecture","architecture"
+"GitHub","github"
+"HPC","hpc"
+"LLMs","llms"
+"Model inference","model inference"
+"NLP","nlp"
+"Privacy","privacy"
+"Security","security"
+"Transformers","transformers"
+"Biochemistry","biochemistry"
+"Biology","biology"
+"Chemistry","chemistry"
+"Teaching","teaching"
+"Economics","economics"
+"Finance","finance"
+"PhD","phd"
+"Physics","physics"
+"Testing","testing"
+"Trading Strategies","trading strategies"
+"Scikit-learn","scikit-learn"
+"Business Analytics","business analytics"
+"Classification","classification"
+"Data management","data management"
+"PHP","php"
+"Industrial","industrial"
+"Airflow","airflow"
+"API Development","api development"
+"APIs","apis"
+"AWS","aws"
+"Big Data","big data"
+"Data pipelines","data pipelines"
+"ETL","etl"
+"Hadoop","hadoop"
+"NoSQL","nosql"
+"Pipelines","pipelines"
+"Scala","scala"
+"Spark","spark"
+"Business Intelligence","business intelligence"
+"Elasticsearch","elasticsearch"
+"Open Source","open source"
+"SageMaker","sagemaker"
+"Streaming","streaming"
+"Agile","agile"
+"Azure","azure"
+"BigQuery","bigquery"
+"CI/CD","ci/cd"
+"GCP","gcp"
+"Git","git"
+"Kafka","kafka"
+"Kubernetes","kubernetes"
+"Redshift","redshift"
+"Consulting","consulting"
+"Google Cloud","google cloud"
+"R","r"
+"R&D","r&d"
+"Data Mining","data mining"
+"Data quality","data quality"
+"DevOps","devops"
+"GitLab","gitlab"
+"Unstructured data","unstructured data"
+"Data analysis","(data analysis|analyze data)"
+"Pandas","pandas"
+"Power BI","power bi"
+"Flink","flink"
+"Linux","linux"
+"Scrum","scrum"
+"Grafana","grafana"
+"Prototyping","prototyping"
+"Informatica","informatica"
+"Qlik","qlik"
+"Talend","talend"
+"Kanban","kanban"
+"Snowflake","snowflake"
+"Blockchain","blockchain"
+"Crypto","crypto"
+"Neo4j","neo4j"
+"QlikView","qlikview"
+"SAS","sas"
+"Genetics","genetics"
+"GANs","gans"
+"Keras","keras"
+"Kubeflow","kubeflow"
+"MLFlow","mlflow"
+"MLOps","mlops"
+"Semantic Analysis","semantic analysis"
+"Avro","avro"
+"Dataflow","dataflow"
+"Docker","docker"
+"DynamoDB","dynamodb"
+"Flask","flask"
+"Kinesis","kinesis"
+"LightGBM","lightgbm"
+"MySQL","mysql"
+"Terraform","terraform"
+"XGBoost","xgboost"
+"Dataproc","dataproc"
+"OOP","oop"
+"XSD","xsd"
+"Bitbucket","bitbucket"
+"Lambda","lambda"
+"Microservices","microservices"
+"MongoDB","mongodb"
+"STEM","stem"
+"Amplitude","amplitude"
+"Excel","excel"
+"ELT","elt"
+"Databricks","databricks"
+"Predictive Maintenance","predictive maintenance"
+"Distributed Systems","distributed systems"
+"MPP","mpp"
+"Predictive modeling","predictive modeling"
+"QuickSight","quicksight"
+"FinTech","fintech"
+"Data governance","data governance"
+"Data strategy","data strategy"
+"Jira","jira"
+"ANN","ann"
+"C++","c++"
+"Robotics","robotics"
+"Nonprofit","nonprofit"
+"Splunk","splunk"
+"Jupyter","jupyter"
+"NumPy","numpy"
+"Plotly","plotly"
+"Statistical modeling","statistical modeling"
+"Banking","banking"
+"DataOps","dataops"
+"Data Warehousing","data warehousing"
+"RDBMS","rdbms"
+"Consulting firm","consulting firm"
+"Market research","market research"
+"Angular","angular"
+"Node.js","node.js"
+"React","react"
+"Causal inference","causal inference"
+"CSV","csv"
+"JSON","json"
+"XML","xml"
+"LookML","lookml"
+"MS SQL","ms sql"
+"T-SQL","t-sql"
+"Oracle","oracle"
+"RPA","rpa"
+"SSIS","ssis"
+"Travel","travel"
+"ITIL","itil"
+"KPIs","kpis"
+"Pentaho","pentaho"
+"Clustering","clustering"
+"Shell scripting","shell scripting"
+"ML infrastructure","ml infrastructure"
+"Athena","athena"
+"FiveTran","fivetran"
+"OLAP","olap"
+"TDD","tdd"
+"Ansible","ansible"
+"Cassandra","cassandra"
+"HBase","hbase"
+"Julia","julia"
+"DB2","db2"
+"HDFS","hdfs"
+"Map Reduce","map reduce"
+"Maven","maven"
+"Spotfire","spotfire"
+"Ruby","ruby"
+"Perl","perl"
+"JavaScript","javascript"
+"RapidMiner","rapidminer"
+"Autonomous Driving","autonomous driving"
+"Caffe","caffe"
+"Computer Vision","computer vision"
+"CUDA","cuda"
+"MXNet","mxnet"
+"OpenCV","opencv"
+"Theano","theano"
+"Teradata","teradata"
+"Conversational AI","conversational ai"
+"NLTK","nltk"
+"EDA","eda"
+"Kibana","kibana"
+"Logstash","logstash"
+"TensorRT","tensorrt"
+"Drug discovery","drug discovery"
+"Pulsar","pulsar"
+"Golang","golang"
+"VR","vr"
+"Healthcare technology","healthcare technology"
+"PySpark","pyspark"
+".NET",".net"
+"Model training","model training"
+"Recommender systems","recommender systems"
+"KNIME","knime"
+"Content creation","content creation"
+"SharePoint","sharepoint"
+"EC2","ec2"
+"Diffusion models","diffusion models"
+"ICLR","iclr"
+"ICML","icml"
+"NeurIPS","neurips"
+"Cluster analysis","cluster analysis"
+"RNN","rnn"
+"REST API","rest api"
+"Matillion","matillion"
+"Feature engineering","feature engineering"
+"SDLC","sdlc"
+"OpenStack","openstack"
+"TypeScript","typescript"
+"Radar","radar"
+"Lidar","lidar"
+"Drones","drones"
+"Econometrics","econometrics"
+"statsmodels","statsmodels"
+"D3","d3"
+"Matplotlib","matplotlib"
+"ElasticNet","elasticnet"
+"Dagster","dagster"
+"Helm","helm"
+"Oozie","oozie"
+"Model deployment","model deployment"
+"Model design","model design"
+"Trifacta","trifacta"
+"MariaDB","mariadb"
+"Parquet","parquet"
+"Bayesian","bayesian"
+"ECS","ecs"
+"Quantum algorithms","quantum algorithms"
+"RabbitMQ","rabbitmq"
+"Monte Carlo","monte carlo"
+"CX","cx"
+"Django","django"
+"fastai","fastai"
+"Horovod","horovod"
+"Lua","lua"
+"Markov Chain","markov chain"
+"AI governance","ai governance"
+"spaCy","spacy"
+"OKR","okr"
+"Rust","rust"
+"ELK","elk"
+"RDKit","rdkit"
+"Weights & Biases","weights & biases"
+"SciPy","scipy"
+"Credit risk","credit risk"
+"ES6","es6"
+"AGI","agi"
+"OpenAI","openai"
+"Topic modeling","topic modeling"
+"Generative modeling","generative modeling"
+"ASIC Design","asic design"
+"Fraud risk","fraud risk"
+"Bigtable","bigtable"
+"BERT","bert"
+"UX Research","ux research"
+"GPT-3","gpt-3"
+"MVPs","mvps"
+"Cybernetics","cybernetics"
+"GraphQL","graphql"
+"OCR","ocr"
+"Haskell","haskell"
+"Machine intelligence","machine intelligence"
+"NLG","nlg"
+"HuggingFace","huggingface"
+"SLAM","slam"
+"Visual SLAM","visual slam"
+"Minitab","minitab"
+"Seaborn","seaborn"
+"Vue","vue"
+"CAD","cad"
+"ASR","asr"
+"Probability theory","probability theory"
+"DataRobot","datarobot"
+"ISO 27001","iso 27001"
+"Periscope","periscope"
+"Nvidia Jetson","nvidia jetson"
+"Clinical NLP","clinical nlp"
+"RDF","rdf"
+"Anaconda","anaconda"
+"Postdoc","postdoc"
+"AI strategy","ai strategy"
+"JMLR","jmlr"
+"Speech synthesis","speech synthesis"
+"Circuit Design","circuit design"
+"Human Machine Interaction","human machine interaction"
+"Azkaban","azkaban"
+"ONNX","onnx"
+"Firehose","firehose"
+"Survey data","survey data"
+"Protein engineering","protein engineering"
+"Mendelian Randomization","mendelian randomization"
+"ggplot2","ggplot2"
+"Elixir","elixir"
+"HiveSQL","hivesql"
+"SparkML","sparkml"
+"EMNLP","emnlp"
+"TOGAF","togaf"
+"CockroachDB","cockroachdb"
+"DDL","ddl"
+"XLNet","xlnet"
+"HiveQL","hiveql"
+"3D Reconstruction","3d reconstruction"
+"3D graphics","3d graphics"
+"Autoregressive models","autoregressive models"
+"Sports industry","sports industry"
+"Accounting concepts","accounting concepts"
+"Driver’s license","driver’s license"
+"Weka","weka"
+"GPT-2","gpt-2"
+"Airtable","airtable"
+"StyleGAN","stylegan"
+"Aggregation","aggregation"
+"Agile methodologies","agile methodologies"
+"AngularJS","angularjs"
+"API","api"
+"Automation","automation"
+"Batch normalization","batch normalization"
+"Bioinformatics","bioinformatics"
+"Biomedical Engineering","biomedical engineering"
+"Bokeh","bokeh"
+"Bootstrapping","bootstrapping"
+"Business acumen","business acumen"
+"C","c"
+"C#","c#"
+"Calculus","calculus"
+"Cloud computing","cloud computing"
+"Collaboration","collabor"
+"Command line","command line"
+"Communicare","communicare"
+"Communication","communication"
+"Creativity","creativity"
+"Critical thinking","critical thinking"
+"Cross validation","cross validation"
+"CSS","css"
+"Curiosity","curiosity"
+"Cybersecurity","cybersecurity"
+"Data cleaning","data cleaning"
+"Data collection","data collection"
+"Data communication","data communication"
+"Data driven decision making","data driven decision making"
+"Data engineering","data engineering"
+"Data integration","data integration"
+"Data literacy","data literacy"
+"Data modeling","data modeling"
+"Data preprocessing","data preprocessing"
+"Data processing ","data processing "
+"Data science","data science"
+"Data security","data security"
+"Data storage","data storage"
+"Data structure","data structure"
+"Data validation","data validation"
+"Data wrangling","data wrangling"
+"Database knowledge","database knowledge"
+"Database management","database management"
+"Decision forest","decision forest"
+"Decision trees","decision trees"
+"Dimensionality reduction","dimensionality reduction"
+"Distributed computing","distributed computing"
+"Ensemble methods","ensemble methods"
+"Experiment design","experiment design"
+"Feature selection","feature selection"
+"FedScope","fedscope"
+"Git version control","git version control"
+"Google Analytics","google analytics"
+"Google Sheets","google sheets"
+"Google Tag Manager","google tag manager"
+"Gradient boosting","gradient boosting"
+"Hierarchical clustering","hierarchical clustering"
+"HTML","html"
+"Hypothesis testing","hypothesis testing"
+"js","js"
+"Leadership","leadership"
+"Linear regression","linear regression"
+"Logistic regression","logistic regression"
+"Machine learning algorithms","machine learning algorithms"
+"MATLAB","matlab"
+"Microsoft Office","microsoft office"
+"Microsoft SQL Server","microsoft sql server"
+"Model evaluation","model evaluation"
+"Model interpretation","model interpretation"
+"Model tuning","model tuning"
+"Naive Bayes","naive bayes"
+"Natural Language Processing ","natural language processing "
+"Neural network","neural network"
+"Optimization","optimization"
+"Oracle Database","oracle database"
+"Predictive analytics","predictive analytics"
+"Problem solving ","problem solving "
+"Programming","programming"
+"Project management","project management"
+"Random forests","random forests"
+"Reinforcement learning","reinforcement learning"
+"Risk modeling","risk modeling"
+"Sampling","sampling"
+"Scripting","scripting"
+"Software developement life cycle","software developement life cycle"
+"SPSS","spss"
+"Statistical analysis","statistical analysis"
+"Storytelling","storytelling"
+"Supervised learning","supervised learning"
+"Support vector machines ","support vector machines "
+"Teamwork","teamwork"
+"Time series analysis","time series analysis"
+"Unix","unix"
+"Unsupervised learning","unsupervised learning"
+"Web developement","web developement"
