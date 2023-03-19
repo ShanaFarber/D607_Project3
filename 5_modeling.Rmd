@@ -5,7 +5,9 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
-```{r setup, message = FALSE}
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+
 library(tidyverse)
 library(randomForest)
 ```
@@ -105,7 +107,7 @@ jobs_skills_matrix <- jobs_long %>%
               names_prefix = 'ed_', values_fill = 0, values_fn = length) %>%
   pivot_wider(names_from = continent, values_from = continent,
               names_prefix = 'loc_', values_fill = 0, values_fn = length) %>%
-  pivot_wider(names_from = skills, values_from = skills,
+  pivot_wider(names_from = skill, values_from = skill,
               values_fill = 0, values_fn = length) %>%
   column_to_rownames(., var = 'job_id') %>%
   select_if(is.numeric) %>%

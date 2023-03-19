@@ -83,17 +83,18 @@ job_listings_enhanced <- job_listings %>%
 
 ## Skills Extraction
 
-Next, all relevant skills from the qualifications and descriptions fields were extracted. These skills are first extracted into a list-column, with each row containing a list of unique skills mentioned in the job details. Then they are unnested to create another long-form dataframe to facilitate further analysis.
+Next, all relevant skills from the qualifications and descriptions fields were extracted. These skills are first extracted into a list-column, with each row containing a list of unique skills mentioned in the job details. Then they are unnested to create another long-form dataframe to facilitate further analysis. This dataframe was joined to the initial skills dataframe by the `serch_word` to get all of the listed skills with proper capitalization. There was one job listing that was removed, as it was listed in German and there were no skills extracted due to the difference in language. 
 
 ```{r}
-skills_clean <- tolower(skills$skill) %>%
-  sort(decreasing = TRUE) %>%
-  str_replace_all('[â¢\u0080-\uFFFF]', '') %>%
-  str_replace_all('[‘’“”\\,\\.\\(\\)\\;\\:\'\\?]','') %>%
-  str_replace_all('[-]', ' ')
+skills_clean <- skills$search_word %>%
+  sort(decreasing = TRUE)
+
 skill_regex_pattern <- paste0('\\b', paste(skills_clean, collapse = '\\b|\\b'), '\\b') %>%
   str_replace_all('c\\+\\+\\\\b','c\\\\\\+\\\\\\+\\(\\?\\= \\)') %>%
-  str_replace_all('c#\\\\b','c\\\\\\#\\(\\?\\= \\)')
+  str_replace_all('c#\\\\b','c\\\\\\#\\(\\?\\= \\)') %>%
+  str_replace_all('visual\\\\b', '\\\\bvisual') %>%
+  str_replace_all('collabor\\\\b', '\\\\bcollabor') %>%
+  str_replace_all('communicat\\\\b', '\\\\bcommunicat')
 
 job_listings_skills <- job_listings_enhanced %>%
   mutate(combo_details = str_c(job_quals, job_description),
@@ -103,8 +104,26 @@ job_listings_skills <- job_listings_enhanced %>%
   mutate(skills = list(unique(skills))) %>%
   ungroup()
 
+# combines the skills with the proper capitalization
+# removes redundancies
 job_listings_skills_long <- job_listings_skills %>%
-  unnest_longer(col = skills, values_to = 'skills', indices_include = FALSE)
+  unnest_longer(col = skills, values_to = 'search_word', indices_include = FALSE) %>%
+  right_join(skills, on = "search_word") %>%
+  select(-search_word) %>%
+  filter(!is.na(website)) %>%
+  unique()
+
+job_id_and_skills <- job_listings_skills_long %>%
+  group_by(job_id) %>%
+  mutate(skills = list(skill)) %>%
+  transmute(job_id, skills) %>%
+  unique()
+
+# removing German job listing - no skills extracted 
+# adding skills string with proper capitalization 
+job_listings_skills <- job_listings_skills %>%
+  filter(job_id %in% job_id_and_skills$job_id) %>%
+  mutate(skills = job_id_and_skills$skills)
 
 job_listings_skills_string <- job_listings_skills %>%
   rowwise() %>% 
@@ -112,22 +131,21 @@ job_listings_skills_string <- job_listings_skills %>%
   ungroup()
 ```
 
-```{r}
+```{r eval=FALSE, echo=FALSE}
 test <- job_listings_enhanced %>% filter(job_id == 41765)
 
-job_listings_skills <- test %>%
+job_listings_skills_test <- test %>%
   mutate(combo_details = str_c(job_quals, job_description),
          skills = str_extract_all(combo_details, skill_regex_pattern))# %>% '\\bc\\+\\+ \\b'
 
-job_listings_skills$skills
+job_listings_skills_test$skills
 ```
-
 
 ### Function for Extracting Skills
 
 Another method we tried for extracting skills is shown in the function below. `extractSkills` was created to cross check the skills dictionary against the job descriptions from the job listings. Within the function,  `job_quals` and `job_description` were checked to account for all places where there might be any skills listed. Ultimately, this function was not used but it is included to show an alternative way for skills extraction to occur. 
 
-```{r skills-extract-func}
+```{r skills-extract-func, eval=FALSE}
 extractSkills <- function(job_df, dict) {
   job_id_and_skill <- c()
   
@@ -138,7 +156,7 @@ extractSkills <- function(job_df, dict) {
                        "Data analysis" = "(Data analysis|analyze data)", 
                        "Communication" = "(Communication|communicate)", 
                        "Collaboration" = "(Collaboration|collaborate|collaborative)", 
-                       "C" = "(\\s|\\\\)C(\\s|,|\\\\)", "C\\+\\+" = "C\\+\\+")
+                       "C" = "(\\s|\\\\)C(\\s|,|\\\\)", "C\\+\\+" = "C\\\\+\\\\+")
 
   for(i in 1:length(job_df$job_id)) {
     job_id <- job_df$job_id[i]
@@ -167,7 +185,6 @@ extractSkills <- function(job_df, dict) {
   return(skills_df)
 }
 ```
-
 
 To take a quick look at the cleaned data from each source the below code could be uncommented. 
 
@@ -199,9 +216,9 @@ kable(head(job_listings_skills_long,5))  |>
 ```
 
 
-## Save the dataframes as csv
+## Save the Dataframes as CSV
 
-The two dataframes were written to csv files.
+The dataframes were written to csv files.
 
 ```{r}
 write.csv(job_listings_enhanced, "output/job_listings_enhanced.csv", row.names = FALSE)
