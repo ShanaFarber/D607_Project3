@@ -3,3 +3,4 @@
 .RData
 .Ruserdata
 .ipynb_checkpoints/webScrape_test-checkpoint.ipynb
+.DS_Store

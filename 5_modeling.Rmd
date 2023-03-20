@@ -174,7 +174,7 @@ We first calulate the distances, confirm the resuling matrix's dimensions and ta
 ```{r}
 jobs_distances <- as.matrix(dist(jobs_skills_matrix, method = 'euclidean'))
 dim(jobs_distances)
-jobs_distances[1:10,1:10]
+jobs_distances[1:7,1:7]
 ```
 Next, we construct a function to identify the k-nearest neighbors. The approach is straightforward. For a given job ID, a row from the above matrix is taken and converted to a dataframe with two columns: job ID and distance. That dataframe is then sorted in ascending order, and the top five job IDs (correlating to the five jobs with the lowest distance) are returned.
 
@@ -210,4 +210,4 @@ write.csv(jobs_skills_matrix, 'job_recommendations/jobs_skills_matrix.csv', row.
 
 ## Conclusion
 
-In conclusion, we were able to construct two models: (i) predict the salary and (ii) find job recommendations for a hypothetical job-seeker. These models are preliminary and could be enhanced with more data, a different way of handling imputation. 
+In conclusion, we were able to construct two models: (i) predict the salary and (ii) find job recommendations for a hypothetical job-seeker. These models are preliminary and could be enhanced with better data, better treatment of missing values, and fine tuning of hyperparameters.. 

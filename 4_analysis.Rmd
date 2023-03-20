@@ -46,7 +46,7 @@ knitr::kable(distinct_job_website)
 
 ## Most Requested Degree
 
-Based on the job postings that had college degree information, having a Master's was first at 496, followed by a Bachelor's at 456. 
+Based on the job postings that had college degree information, having a Master's was first at 498, followed by a Bachelor's at 456. 
 
 ```{r college-degree}
 high_degree <- 
@@ -260,7 +260,7 @@ data_analyst_top10 <-
 data_scientist_top10 %>%
   ggplot(aes(y = reorder(skill, n), x = n, fill = f_color)) +
     geom_bar(stat = "identity") +
-    labs(title = "Top 10 Skills for Data Scienctists", x = "Count", y='') +
+    labs(title = "Top 10 Skills for Data Scientists", x = "Count", y='') +
     theme_bw() +
     theme(legend.position = "none") +
     scale_fill_manual(values = c("Yes" = "#F28E2B", "No" = "gray")) +
@@ -286,12 +286,12 @@ data_analyst_top10 %>%
 
 ## Wordclouds
 
-Sort the data by the number of citations in descending order and select the top 50 most cited skills. Create the plot using ggplot2 and ggwordcloud packages
+Sort the data by the number of citations in descending order and select the top 20 most cited skills. Create the plot using ggplot2 and ggwordcloud packages
 
 ```{r rename6}
 skill_counts <- skill_counts %>%
   arrange(desc(count)) %>%
-  head(50)
+  head(20)
 
 ggplot(skill_counts, aes(label = skill, size = count, color = factor(sample.int(8, nrow(skill_counts), replace = TRUE)))) +
   geom_text_wordcloud() +
@@ -299,67 +299,12 @@ ggplot(skill_counts, aes(label = skill, size = count, color = factor(sample.int(
   theme_minimal()
 ```
 
-#### Most frequently counted skills for job listings with at least 5 years of experience
-
-```{r}
-exp5_skill_counts <- import_df %>%
-  filter(years_exp >= 5) %>%
-  group_by(skill) %>%
-  summarize(counts = n(), .groups = 'keep')
-
-ggplot(exp5_skill_counts, aes(label = skill, size = counts, color = factor(sample.int(8, nrow(exp5_skill_counts), replace = TRUE)))) +
-  geom_text_wordcloud() +
-  scale_size_area(max_size = 10) +
-  theme_minimal()
-```
-
-The code is creating a word cloud of skills that are required for jobs with 5 or more years of experience. The jobs_long data frame is filtered to keep only the rows where the years_exp column is greater than or equal to 5, and then grouped by the skills column.
-
-```{r}
-# Plot a word cloud of the most frequently cited skills
-skills_freq <- import_df %>%
-  count(skill) %>%
-  arrange(desc(n)) %>%
-  head(100)
-
-ggplot(skills_freq, aes(label = skill, size = n, color = factor(sample.int(8, nrow(skills_freq), replace = TRUE)))) +
-  geom_text_wordcloud() +
-  theme_minimal() +
-  scale_size_area(max_size = 10) +
-  labs(title = "Most frequently cited skills")
-```
-
-This code generates a word cloud plot of the most frequently cited skills in the jobs_long dataset. It first creates a new dataframe called skills_freq that counts the frequency of each skill in the skills column of jobs_long, arranges them in descending order, and selects the top 100. It then uses ggplot and geom_text_wordcloud to plot the skill names as words, with the size of the word indicating the frequency of the skill. The plot is given a title "Most frequently cited skills
-
-## Location and Education
-
-The code is generating a stacked bar chart that shows the number of job listings for each combination of location and highest education level. The x-axis represents the highest education level and the bars are stacked by location. 
-
-```{r loc-edu}
-# Plot a stacked bar chart of the number of job listings by location and highest education level
-loc_edu <-
-  import_df |> 
-  na.omit(continent, highest_ed) |>
-  group_by(continent, highest_ed) |> 
-  summarise(count = n_distinct(job_id), .groups = "keep")
-
- loc_edu |> 
-  ggplot(aes(y = reorder(continent, count), x = count, fill = continent)) +
-  geom_bar(stat = 'identity') +
-  labs(title = "Number of job listings by location and highest education level",
-       x = "", y = "") +
-  theme_bw() +
-  theme(legend.position = "none") +
-   facet_grid(cols = vars(highest_ed)) +
-   scale_fill_brewer(palette = "Dark2") 
-   
- knitr::kable(loc_edu |> pivot_wider(names_from = highest_ed, values_from = count))
-```
+This code generates a word cloud plot of the most frequently cited skills in the jobs_long dataset. It first creates a new dataframe called skills_freq that counts the frequency of each skill in the skills column of jobs_long, arranges them in descending order, and selects the top 20 It then uses ggplot and geom_text_wordcloud to plot the skill names as words, with the size of the word indicating the frequency of the skill. The plot is given a title "Most frequently cited skills".
 
 ## Conclusion 
 
 The "Master" education level is the most prevalent among different job types, followed by "PhD" and "Bachelor".
-The majority of jobs have a maximum salary value between 0 and 100,000 USD. There are relatively fewer jobs with a maximum salary value between 100,000 and 200,000 USD, and even fewer with a maximum salary value between 200,000 and 300,000 USD. There are only a few jobs with a maximum salary value above 300,000 USD.
+The majority of jobs have a maximum salary value between 100,000 and 200,000 USD. There are relatively fewer jobs with a maximum salary value between 0 and 100,000 USD, and even fewer with a maximum salary value between 200,000 and 300,000 USD. There are only a few jobs with a maximum salary value above 300,000 USD.
 There are differences in the distribution of years of experience across different job positions and education levels. For example, among individuals with a Bachelor's degree, the distribution of years of experience appears to be skewed towards the lower end, suggesting that many individuals in these positions have relatively little experience. On the other hand, among individuals with a PhD, the distribution of years of experience appears to be more evenly spread out, suggesting that individuals with a PhD may have more varied levels of experience.
 The most frequently cited skills in the job listings are "Python", "SQL", and "Machine Learning". The top skills cited in the job listings vary depending on the highest education level required and the job location.
 
