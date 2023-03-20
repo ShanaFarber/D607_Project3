@@ -5,9 +5,9 @@ account: kac624
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 8603718
-bundleId: 6975682
+bundleId: 6979991
 url: https://kac624.shinyapps.io/rf_salary_prediction/
-when: 1679149146.32735
-lastSyncTime: 1679149146.32736
+when: 1679274089.85702
+lastSyncTime: 1679274089.85703
 asMultiple: FALSE
 asStatic: FALSE

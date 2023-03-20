@@ -4,7 +4,8 @@ library(tidyverse)
 
 # Read in data and define knn function
 jobs_skills_matrix <- read.csv('jobs_skills_matrix.csv', row.names = 1)
-job_listings <- read.csv('job_listings_skills_string.csv')
+job_listings <- read.csv('job_listings_skills_string.csv') %>%
+  mutate(job_title = str_to_sentence(job_title))
 knn <- function(i, distance_matrix, k = 5) {
   neighbors <- data.frame(dist = distance_matrix[i,])
   k_nearest_ids <- arrange(neighbors, dist) %>% 

@@ -5,9 +5,9 @@ account: kac624
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 8603699
-bundleId: 6975671
+bundleId: 6980008
 url: https://kac624.shinyapps.io/data_science_job_recommender/
-when: 1679148900.27131
-lastSyncTime: 1679148900.27131
+when: 1679274446.12504
+lastSyncTime: 1679274446.12505
 asMultiple: FALSE
 asStatic: FALSE
