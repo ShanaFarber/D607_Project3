@@ -246,15 +246,17 @@ data_analyst_top10 <- data_analyst %>%
   arrange(desc(n)) %>%
   head(n = 10)
 
-common_skills <- as.vector(data_analyst_top10 |> 
+common_skills <- data_analyst_top10 |> 
   inner_join(data_scientist_top10, by = 'skill') |> 
-  select(skill))
+  select(skill)
+
+vec_common_skills <- common_skills[['skill']]
 
 data_scientist_top10 <-
-  data_scientist_top10 |> mutate(f_color = ifelse(skill %in% c('C++', 'Python', 'Data visualization', 'Statistics'), "Yes", "No"))
+  data_scientist_top10 |> mutate(f_color = ifelse(skill %in% vec_common_skills, "Yes", "No"))
 
 data_analyst_top10 <-
-  data_analyst_top10 |> mutate(f_color = ifelse(skill %in% c('C++', 'Python', 'Data visualization', 'Statistics'), "Yes", "No"))
+  data_analyst_top10 |> mutate(f_color = ifelse(skill %in% vec_common_skills, "Yes", "No"))
 
 # plot top 10
 data_scientist_top10 %>%
