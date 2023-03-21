@@ -121,7 +121,8 @@ server <- function(input, output) {
     output_df <- output_df %>% select(-highest_ed,
                                       -years_exp,
                                       -continent,
-                                      -country)
+                                      -country,
+                                      -salary_currency)
     
     DT::datatable(output_df,
                   options = list(dom = 't'),
